@@ -61,6 +61,11 @@ class MyAstBuilder(conf: SQLConf) extends SqlBaseBaseVisitor[AnyRef] with Loggin
    * when the context has only one child. This is done because there is no generic method to
    * combine the results of the context children. In all other cases null is returned.
    */
+
+  // TODO  add a visitSpatial here
+  //override def visitSpatial()
+
+
   override def visitChildren(node: RuleNode): AnyRef = {
     if (node.getChildCount == 1) {
       node.getChild(0).accept(this)

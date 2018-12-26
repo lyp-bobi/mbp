@@ -30,7 +30,7 @@ case class B_RTreeRelation(output: Seq[Attribute], child: SparkPlan, table_name:
   override def children: Seq[LogicalPlan] = Nil
 
   override def newInstance(): B_RTreeRelation = {
-    // the rand part should be replace by the RDD id of Index
+    // TODO: the rand part should be replace by the RDD id of Index
     B_RTreeRelation(output.map(_.newInstance()), child, table_name,
       column_keys, index_name).asInstanceOf[this.type]
   }

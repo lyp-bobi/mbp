@@ -23,9 +23,9 @@ class SessionProvider(var ss: SparkSession) {
   def init(): SparkSession = {
     ss = SparkSession.builder().master("...").config("...", true)
       // .withExtensions(
-      // // use a self defined parser to parse the sql trees
+      // TODO: use a self defined parser to parse the sql trees
       // extensions => extensions.injectParser(...)
-      // // use a Rule replace Relations with B_RTreeRelation at here
+      // TODO: use a Rule replace Relations with B_RTreeRelation at here
       // extensions => extensions.injectOptimizerRule(...)
       // )
         .getOrCreate()
