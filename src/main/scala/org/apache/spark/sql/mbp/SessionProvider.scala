@@ -17,18 +17,33 @@
 
 package org.apache.spark.sql.mbp
 
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{SparkSession, SparkSessionExtensions}
+import org.apache.spark.sql.mbp.relation.mbpOptimizer
+import org.apache.spark.sql.catalyst.parser.mbp.{MyCatalystSqlParser}
 
-class SessionProvider(var ss: SparkSession) {
-  def init(): SparkSession = {
-    ss = SparkSession.builder().master("...").config("...", true)
-      // .withExtensions(
-      // TODO: use a self defined parser to parse the sql trees
-      // extensions => extensions.injectParser(...)
-      // TODO: use a Rule replace Relations with B_RTreeRelation at here
-      // extensions => extensions.injectOptimizerRule(...)
-      // )
+/*
+The only interface to interact with spark
+ */
+
+object SessionProvider {
+  val pvd=new SessionProvider()
+  def getSession()=pvd.getOrInit()
+}
+
+class SessionProvider private(var ss: SparkSession=null) {
+  type ExtensionsBuilder = SparkSessionExtensions => Unit
+  private def create(builder: ExtensionsBuilder): ExtensionsBuilder = builder
+  def getOrInit(): SparkSession = {
+    if(ss==null){
+      ss = SparkSession.builder().master("...").config("...", true)
+         .withExtensions(extensions =>
+           // TODO: use a self defined parser to parse the sql trees
+           extensions.injectParser((_, _) => MyCatalystSqlParser)
+          // TODO: use a Rule to replace Relations with B_RTreeRelation at here
+//           extensions.injectOptimizerRule(mbpOptimizer)
+         )
         .getOrCreate()
+    }
     ss
   }
 }

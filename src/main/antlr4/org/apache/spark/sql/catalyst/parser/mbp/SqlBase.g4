@@ -1014,8 +1014,10 @@ ANTI: 'ANTI';
 LOCAL: 'LOCAL';
 INPATH: 'INPATH';
 
-// mbp: did some changes here to provide
+// TODO: decide the predicates that should be implemented
 IDIST: 'IDIST';
+MKTRAJ: 'MKTRAJ';
+MKTRAJ3D: 'MKTRAJ3D';
 TRIE: 'TRIE';
 KNN: 'KNN';
 TRAJECTORY: 'TRAJECTORY';

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.spark.sql.catalyst.parser.mbp.parser
+package org.apache.spark.sql.catalyst.parser.mbp
 
 import org.antlr.v4.runtime._
 import org.antlr.v4.runtime.atn.PredictionMode
@@ -26,6 +26,7 @@ import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.catalyst.trees.Origin
 import org.apache.spark.sql.catalyst.{FunctionIdentifier, TableIdentifier}
+import org.apache.spark.sql.catalyst.parser.{ParserInterface, ParserUtils, LegacyTypeStringParser}
 import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.types.{DataType, StructType}
 
@@ -124,12 +125,12 @@ abstract class AbstractSqlParser extends ParserInterface with Logging {
 /**
  * Concrete SQL parser for Catalyst-only SQL statements.
  */
-class CatalystSqlParser(conf: SQLConf) extends AbstractSqlParser {
+class MyCatalystSqlParser(conf: SQLConf) extends AbstractSqlParser {
   val astBuilder = new MyAstBuilder(conf)
 }
 
 /** For test-only. */
-object CatalystSqlParser extends AbstractSqlParser {
+object MyCatalystSqlParser extends AbstractSqlParser {
   val astBuilder = new MyAstBuilder(new SQLConf())
 }
 

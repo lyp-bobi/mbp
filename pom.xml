@@ -34,6 +34,12 @@
             <artifactId>antlr4-runtime</artifactId>
             <version>4.5.3</version>
         </dependency>
+        <dependency>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest_${scala.binary.version}</artifactId>
+            <version>3.0.1</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     <build>
         <outputDirectory>target/scala-${scala.binary.version}/classes</outputDirectory>
@@ -64,7 +70,7 @@
                 </executions>
                 <configuration>
                     <visitor>true</visitor>
-                    <sourceDirectory>../catalyst/src/main/antlr4</sourceDirectory>
+                    <sourceDirectory>../mbp/src/main/antlr4</sourceDirectory>
                 </configuration>
             </plugin>
         </plugins>
