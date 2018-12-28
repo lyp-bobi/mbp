@@ -45,11 +45,11 @@ class mbpBlockManager(
     memoryManager, mapOutputTracker, shuffleManager, blockTransferService,
     securityManager, numUsableCores) {
   override def get[T: ClassTag](blockId: BlockId): Option[BlockResult] = super.get(blockId)
-  def this(bm: BlockManager){
+  def this(bm: BlockManager) = {
     val cores=bm.conf.get("spark.executor.cores")-1   //bobi: I'm really not sure if this would work or not
     val env = SparkEnv.get
-    this(env.executorId,env.rpcEnv,bm.master,bm.serializerManager,bm.conf,env.memoryManager,env.mapOutputTracker,
-      env.shuffleManager,bm.blockTransferService,env.securityManager,cores)
+    this(env.executorId, env.rpcEnv, bm.master, bm.serializerManager, bm.conf, env.memoryManager, env.mapOutputTracker,
+      env.shuffleManager, bm.blockTransferService, env.securityManager, cores)
   }
   override val memoryStore =
     new mbpMemoryStore(conf, blockInfoManager, serializerManager, memoryManager, this)
