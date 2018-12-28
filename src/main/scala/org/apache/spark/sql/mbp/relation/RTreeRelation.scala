@@ -23,15 +23,17 @@ import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.execution.SparkPlan
 import org.apache.spark.storage.StorageLevel
 
-case class B_RTreeRelation(output: Seq[Attribute], child: SparkPlan, table_name: Option[String],
-                                               column_keys: List[Attribute], index_name: String)
+//I think maybe we don't have to use Relation( =  local index)
+
+@Deprecated case class RTreeRelation(output: Seq[Attribute], child: SparkPlan, table_name: Option[String],
+                         column_keys: List[Attribute], index_name: String)
   extends LogicalPlan with MultiInstanceRelation{
 
   override def children: Seq[LogicalPlan] = Nil
 
-  override def newInstance(): B_RTreeRelation = {
+  override def newInstance(): RTreeRelation = {
     // TODO: the rand part should be replace by the RDD id of Index
-    B_RTreeRelation(output.map(_.newInstance()), child, table_name,
+    RTreeRelation(output.map(_.newInstance()), child, table_name,
       column_keys, index_name).asInstanceOf[this.type]
   }
 }

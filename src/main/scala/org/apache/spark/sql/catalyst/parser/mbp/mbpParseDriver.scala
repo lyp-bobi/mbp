@@ -76,7 +76,7 @@ abstract class AbstractSqlParser extends ParserInterface with Logging {
   }
 
   /** Get the builder (visitor) which converts a ParseTree into an AST. */
-  protected def astBuilder: MyAstBuilder
+  protected def astBuilder: mbpAstBuilder
 
   protected def parse[T](command: String)(toResult: SqlBaseParser => T): T = {
     logDebug(s"Parsing command: $command")
@@ -125,13 +125,13 @@ abstract class AbstractSqlParser extends ParserInterface with Logging {
 /**
  * Concrete SQL parser for Catalyst-only SQL statements.
  */
-class MyCatalystSqlParser(conf: SQLConf) extends AbstractSqlParser {
-  val astBuilder = new MyAstBuilder(conf)
+class MbpCatalystSqlParser(conf: SQLConf) extends AbstractSqlParser {
+  val astBuilder = new mbpAstBuilder(conf)
 }
 
 /** For test-only. */
-object MyCatalystSqlParser extends AbstractSqlParser {
-  val astBuilder = new MyAstBuilder(new SQLConf())
+object MbpCatalystSqlParser extends AbstractSqlParser {
+  val astBuilder = new mbpAstBuilder(new SQLConf())
 }
 
 /**

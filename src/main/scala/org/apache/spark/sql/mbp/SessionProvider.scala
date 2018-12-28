@@ -17,9 +17,12 @@
 
 package org.apache.spark.sql.mbp
 
+import org.apache.spark.SparkEnv
 import org.apache.spark.sql.{SparkSession, SparkSessionExtensions}
 import org.apache.spark.sql.mbp.relation.mbpOptimizer
-import org.apache.spark.sql.catalyst.parser.mbp.{MyCatalystSqlParser}
+import org.apache.spark.sql.catalyst.parser.mbp.{MbpCatalystSqlParser}
+import org.apache.spark.sql.mbp.relation.B_RTreeRelationScanStrategy
+import org.apache.spark.storage.mbp.mbpBlockManager
 
 /*
 The only interface to interact with spark
@@ -36,14 +39,22 @@ class SessionProvider private(var ss: SparkSession=null) {
   def getOrInit(): SparkSession = {
     if(ss==null){
       ss = SparkSession.builder().master("...").config("...", true)
-         .withExtensions(extensions =>
+         .withExtensions(extensions =>{
            // TODO: use a self defined parser to parse the sql trees
-           extensions.injectParser((_, _) => MyCatalystSqlParser)
-          // TODO: use a Rule to replace Relations with B_RTreeRelation at here
-//           extensions.injectOptimizerRule(mbpOptimizer)
-         )
+           extensions.injectParser((_, _) => MbpCatalystSqlParser)
+           // TODO: use a Rule to replace Relations with B_RTreeRelation at here
+           extensions.injectOptimizerRule(mbpOptimizer)
+           // TODO: implement the strategy that parse the B_RTreeRelation to B_RTreeRelationScan
+           extensions.injectPlannerStrategy(_=>B_RTreeRelationScanStrategy)
+         })
         .getOrCreate()
     }
     ss
+  }
+  def evilReplacement():Unit={
+    // this try is already failed
+    val env = SparkEnv.get
+    val blockManager = new mbpBlockManager(env.blockManager)
+    // env.blockManager = blockManager
   }
 }

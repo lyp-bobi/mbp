@@ -21,11 +21,17 @@ import org.apache.spark.rdd.{PartitionPruningRDD, RDD}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{Attribute, Expression, Literal, PredicateHelper, UnsafeProjection}
 import org.apache.spark.sql.execution.SparkPlan
+import org.apache.spark.sql.Strategy
+import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 
-case class B_RTreeRelationScan(attributes: Seq[Attribute],
+@Deprecated case class B_RTreeRelationScan(attributes: Seq[Attribute],
                           predicates: Seq[Expression],
-                          relation: B_RTreeRelation) extends SparkPlan with PredicateHelper{
+                          relation: RTreeRelation) extends SparkPlan with PredicateHelper{
   override def output: Seq[Attribute] = attributes
   override def children:Seq[SparkPlan] = Nil // for UnaryNode
   override protected def doExecute(): RDD[InternalRow] = null
+}
+
+@Deprecated object B_RTreeRelationScanStrategy extends Strategy with PredicateHelper{
+  override def apply(plan: LogicalPlan): Seq[SparkPlan] = super.apply(plan)
 }
