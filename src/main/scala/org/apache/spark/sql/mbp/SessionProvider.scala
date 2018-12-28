@@ -50,6 +50,12 @@ class SessionProvider private(var ss: SparkSession=null) {
            extensions.injectPlannerStrategy(_=>B_RTreeRelationScanStrategy)
          })
         .getOrCreate()
+      // evil replacement
+      val env=SparkEnv.get
+      val newenv=new SparkEnv(env.executorId,env.rpcEnv,env.serializer,env.closureSerializer,env.serializerManager,
+        env.mapOutputTracker,env.shuffleManager,env.broadcastManager,new mbpBlockManager(env.blockManager),env.securityManager,
+        env.metricsSystem,env.memoryManager,env.outputCommitCoordinator,env.conf)
+      SparkEnv.set(newenv)
     }
     ss
   }
