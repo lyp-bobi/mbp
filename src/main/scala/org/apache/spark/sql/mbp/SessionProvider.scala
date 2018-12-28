@@ -17,12 +17,13 @@
 
 package org.apache.spark.sql.mbp
 
-import org.apache.spark.SparkEnv
+import org.apache.spark.{SparkEnv, SparkContext}
 import org.apache.spark.sql.{SparkSession, SparkSessionExtensions}
 import org.apache.spark.sql.mbp.relation.mbpOptimizer
 import org.apache.spark.sql.catalyst.parser.mbp.{MbpCatalystSqlParser}
 import org.apache.spark.sql.mbp.relation.B_RTreeRelationScanStrategy
 import org.apache.spark.storage.mbp.mbpBlockManager
+import org.apache.spark.sql.mbp.mbpContext
 
 /*
 The only interface to interact with spark
@@ -38,7 +39,8 @@ class SessionProvider private(var ss: SparkSession=null) {
   private def create(builder: ExtensionsBuilder): ExtensionsBuilder = builder
   def getOrInit(): SparkSession = {
     if(ss==null){
-      ss = SparkSession.builder().master("...").config("...", true)
+      val mbpsc = new mbpContext()
+      ss = SparkSession.builder().sparkContext(mbpsc).master("...").config("...", true)
          .withExtensions(extensions =>{
            // TODO: use a self defined parser to parse the sql trees
            extensions.injectParser((_, _) => MbpCatalystSqlParser)
@@ -50,11 +52,5 @@ class SessionProvider private(var ss: SparkSession=null) {
         .getOrCreate()
     }
     ss
-  }
-  def evilReplacement():Unit={
-    // this try is already failed
-    val env = SparkEnv.get
-    val blockManager = new mbpBlockManager(env.blockManager)
-    // env.blockManager = blockManager
   }
 }

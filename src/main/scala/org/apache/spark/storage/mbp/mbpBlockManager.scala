@@ -28,7 +28,7 @@ import org.apache.spark.storage.{BlockId, BlockManager, BlockManagerMaster, Bloc
 import org.apache.spark.scheduler.{SparkListener, SparkListenerExecutorAdded}
 
 
-@Deprecated class mbpBlockManager(
+class mbpBlockManager(
                        executorId: String,
                        rpcEnv: RpcEnv,
                        override val master: BlockManagerMaster,

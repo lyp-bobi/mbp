@@ -23,7 +23,7 @@ import org.apache.spark.serializer.SerializerManager
 import org.apache.spark.storage.{BlockId, BlockInfoManager}
 import org.apache.spark.storage.memory.{BlockEvictionHandler, MemoryStore}
 
-@Deprecated class mbpMemoryStore(
+class mbpMemoryStore(
                  conf: SparkConf,
                  blockInfoManager: BlockInfoManager,
                  serializerManager: SerializerManager,
