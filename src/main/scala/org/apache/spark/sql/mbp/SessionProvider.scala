@@ -20,10 +20,9 @@ package org.apache.spark.sql.mbp
 import org.apache.spark.{SparkEnv, SparkContext}
 import org.apache.spark.sql.{SparkSession, SparkSessionExtensions}
 import org.apache.spark.sql.mbp.relation.mbpOptimizer
-import org.apache.spark.sql.catalyst.parser.mbp.{MbpCatalystSqlParser}
+import org.apache.spark.sql.catalyst.parser.mbp.{mbpCatalystSqlParser}
 import org.apache.spark.sql.mbp.relation.B_RTreeRelationScanStrategy
 import org.apache.spark.storage.mbp.mbpBlockManager
-import org.apache.spark.sql.mbp.mbpContext
 
 /*
 The only interface to interact with spark
@@ -43,7 +42,7 @@ class SessionProvider private(var ss: SparkSession=null) {
       ss = SparkSession.builder().sparkContext(mbpsc).master("...").config("...", true)
          .withExtensions(extensions =>{
            // TODO: use a self defined parser to parse the sql trees
-           extensions.injectParser((_, _) => MbpCatalystSqlParser)
+           extensions.injectParser((_, _) => mbpCatalystSqlParser)
            // TODO: use a Rule to replace Relations with B_RTreeRelation at here
            extensions.injectOptimizerRule(mbpOptimizer)
            // TODO: implement the strategy that parse the B_RTreeRelation to B_RTreeRelationScan
@@ -53,7 +52,7 @@ class SessionProvider private(var ss: SparkSession=null) {
       // evil replacement
       val env=SparkEnv.get
       val newenv=new SparkEnv(env.executorId,env.rpcEnv,env.serializer,env.closureSerializer,env.serializerManager,
-        env.mapOutputTracker,env.shuffleManager,env.broadcastManager,new mbpBlockManager(env.blockManager),env.securityManager,
+        env.mapOutputTracker,env.shuffleManager,env.broadcastManager,mbpBlockManager.create(env.blockManager),env.securityManager,
         env.metricsSystem,env.memoryManager,env.outputCommitCoordinator,env.conf)
       SparkEnv.set(newenv)
     }

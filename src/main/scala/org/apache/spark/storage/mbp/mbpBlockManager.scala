@@ -17,7 +17,7 @@
 package org.apache.spark.storage.mbp
 
 import scala.reflect.ClassTag
-import org.apache.spark.{MapOutputTracker, SecurityManager, SparkConf, SparkEnv, SparkConf}
+import org.apache.spark.{MapOutputTracker, SecurityManager, SparkConf, SparkEnv}
 import org.apache.spark.memory.MemoryManager
 import org.apache.spark.network.BlockTransferService
 import org.apache.spark.rpc.RpcEnv
@@ -45,12 +45,15 @@ class mbpBlockManager(
     memoryManager, mapOutputTracker, shuffleManager, blockTransferService,
     securityManager, numUsableCores) {
   override def get[T: ClassTag](blockId: BlockId): Option[BlockResult] = super.get(blockId)
-  def this(bm: BlockManager) = {
-    val cores=bm.conf.get("spark.executor.cores")-1   //bobi: I'm really not sure if this would work or not
-    val env = SparkEnv.get
-    this(env.executorId, env.rpcEnv, bm.master, bm.serializerManager, bm.conf, env.memoryManager, env.mapOutputTracker,
-      env.shuffleManager, bm.blockTransferService, env.securityManager, cores)
-  }
   override val memoryStore =
     new mbpMemoryStore(conf, blockInfoManager, serializerManager, memoryManager, this)
+}
+object mbpBlockManager{
+  def create(bm: BlockManager) : BlockManager = {
+    val env = SparkEnv.get
+    val cores = Integer.parseInt(bm.conf.get("spark.executor.cores"))-1//bobi: I'm really not sure if this would work or not
+    new mbpBlockManager(env.executorId, env.rpcEnv, bm.master, bm.serializerManager, bm.conf, env.memoryManager, env.mapOutputTracker,
+      env.shuffleManager, bm.blockTransferService, env.securityManager, cores)
+
+  }
 }
