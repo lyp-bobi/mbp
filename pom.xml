@@ -9,7 +9,8 @@
     <version>0.1</version>
     <properties>
         <scala.binary.version>2.11</scala.binary.version>
-        <spark.version>2.3.1</spark.version>
+        <spark.version>2.3.2</spark.version>
+        <jetty.version>9.3.24.v20180605</jetty.version>
     </properties>
     <dependencies>
         <dependency>
@@ -39,6 +40,12 @@
             <artifactId>scalatest_${scala.binary.version}</artifactId>
             <version>3.0.1</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-http</artifactId>
+            <version>${jetty.version}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
     <build>
@@ -72,6 +79,31 @@
                     <visitor>true</visitor>
                     <sourceDirectory>../mbp/src/main/antlr4</sourceDirectory>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.4.1</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.my.package.SparkDriverApp</mainClass>
+                        </manifest>
+                    </archive>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <skipAssembly>false</skipAssembly>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>package</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

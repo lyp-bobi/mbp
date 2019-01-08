@@ -26,6 +26,7 @@ import org.apache.spark.shuffle.ShuffleManager
 import org.apache.spark.storage.memory.mbp.mbpMemoryStore
 import org.apache.spark.storage.{BlockId, BlockManager, BlockManagerMaster, BlockResult}
 import org.apache.spark.scheduler.{SparkListener, SparkListenerExecutorAdded}
+import org.apache.spark.internal.Logging
 
 
 class mbpBlockManager(
@@ -48,10 +49,13 @@ class mbpBlockManager(
   override val memoryStore =
     new mbpMemoryStore(conf, blockInfoManager, serializerManager, memoryManager, this)
 }
-object mbpBlockManager{
+object mbpBlockManager extends Logging{
   def create(bm: BlockManager) : BlockManager = {
     val env = SparkEnv.get
-    val cores = Integer.parseInt(bm.conf.get("spark.executor.cores"))-1//bobi: I'm really not sure if this would work or not
+    var cores = 1
+    logInfo("mbpBlockManager Started")
+    //TODO: find the cores that are usable
+    //bm.conf.getOption("spark.executor.cores")//bobi: I'm really not sure if this would work or not
     new mbpBlockManager(env.executorId, env.rpcEnv, bm.master, bm.serializerManager, bm.conf, env.memoryManager, env.mapOutputTracker,
       env.shuffleManager, bm.blockTransferService, env.securityManager, cores)
 

@@ -24,7 +24,7 @@ import org.apache.spark.sql.execution.SparkPlan
 import org.apache.spark.sql.Strategy
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 
-@Deprecated case class B_RTreeRelationScan(attributes: Seq[Attribute],
+case class B_RTreeRelationScan(attributes: Seq[Attribute],
                           predicates: Seq[Expression],
                           relation: RTreeRelation) extends SparkPlan with PredicateHelper{
   override def output: Seq[Attribute] = attributes
@@ -32,6 +32,6 @@ import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
   override protected def doExecute(): RDD[InternalRow] = null
 }
 
-@Deprecated object B_RTreeRelationScanStrategy extends Strategy with PredicateHelper{
-  override def apply(plan: LogicalPlan): Seq[SparkPlan] = super.apply(plan)
-}
+//object B_RTreeRelationScanStrategy extends Strategy with PredicateHelper{
+//  override def apply(plan: LogicalPlan): Seq[SparkPlan] = super.apply(plan)
+//}

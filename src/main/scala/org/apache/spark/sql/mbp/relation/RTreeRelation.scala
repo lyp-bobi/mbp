@@ -25,7 +25,7 @@ import org.apache.spark.storage.StorageLevel
 
 //I think maybe we don't have to use Relation( =  local index)
 
-@Deprecated case class RTreeRelation(output: Seq[Attribute], child: SparkPlan, table_name: Option[String],
+case class RTreeRelation(output: Seq[Attribute], child: SparkPlan, table_name: Option[String],
                          column_keys: List[Attribute], index_name: String)
   extends LogicalPlan with MultiInstanceRelation{
 

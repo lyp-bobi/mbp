@@ -186,7 +186,7 @@ private[parser] class UpperCaseCharStream(wrapped: CodePointCharStream) extends 
   */
 case object ParseErrorListener extends BaseErrorListener {
   override def syntaxError(
-                            recognizer: Recognizer[_, _<: ATNSimulator],
+                            recognizer: Recognizer[_, _],
                             offendingSymbol: scala.Any,
                             line: Int,
                             charPositionInLine: Int,
