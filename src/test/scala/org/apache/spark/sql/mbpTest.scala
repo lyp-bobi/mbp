@@ -1,5 +1,6 @@
 package org.apache.spark.sql
 
+import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest.FunSuite
 import org.scalatest.BeforeAndAfter
 import org.apache.spark.sql.mbp.SessionProvider
@@ -21,7 +22,8 @@ Procedure:
 
 class mbpTest extends FunSuite with BeforeAndAfter{
   before{
-    val ss=SessionProvider.getSession()
+    val conf = new SparkConf().setMaster("local[*]").setAppName("test")
+    val ss= SessionProvider.getSession(conf)
   }
   // TODO: Test the Session Provider
   test("BoomBoomPow"){
