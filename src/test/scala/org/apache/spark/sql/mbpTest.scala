@@ -21,12 +21,14 @@ Procedure:
  */
 
 class mbpTest extends FunSuite with BeforeAndAfter{
+  var ss:SparkSession=_
   before{
     val conf = new SparkConf().setMaster("local[*]").setAppName("test")
-    val ss= SessionProvider.getSession(conf)
+    ss= SessionProvider.getOrCreateSession(conf)
   }
   // TODO: Test the Session Provider
   test("BoomBoomPow"){
-
+    val df=ss.read.csv("/home/chuang/43676060.csv")
+    df.count()
   }
 }
