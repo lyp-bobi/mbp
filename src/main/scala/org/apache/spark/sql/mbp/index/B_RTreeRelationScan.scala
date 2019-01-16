@@ -15,7 +15,7 @@
  *
  */
 
-package org.apache.spark.sql.mbp.relation
+package org.apache.spark.sql.mbp.index
 
 import org.apache.spark.rdd.{PartitionPruningRDD, RDD}
 import org.apache.spark.sql.catalyst.InternalRow
@@ -26,7 +26,7 @@ import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 
 case class B_RTreeRelationScan(attributes: Seq[Attribute],
                           predicates: Seq[Expression],
-                          relation: RTreeRelation) extends SparkPlan with PredicateHelper{
+                          relation: B_RTreeRelation) extends SparkPlan with PredicateHelper{
   override def output: Seq[Attribute] = attributes
   override def children:Seq[SparkPlan] = Nil // for UnaryNode
   override protected def doExecute(): RDD[InternalRow] = null

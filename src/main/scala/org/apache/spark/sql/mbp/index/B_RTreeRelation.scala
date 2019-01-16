@@ -15,7 +15,7 @@
  *
  */
 
-package org.apache.spark.sql.mbp.relation
+package org.apache.spark.sql.mbp.index
 
 import org.apache.spark.sql.catalyst.analysis.MultiInstanceRelation
 import org.apache.spark.sql.catalyst.expressions.Attribute
@@ -25,15 +25,15 @@ import org.apache.spark.storage.StorageLevel
 
 //I think maybe we don't have to use Relation( =  local index)
 
-case class RTreeRelation(output: Seq[Attribute], child: SparkPlan, table_name: Option[String],
-                         column_keys: List[Attribute], index_name: String)
+case class B_RTreeRelation(output: Seq[Attribute], child: SparkPlan, table_name: Option[String],
+                           column_keys: List[Attribute], index_name: String)
   extends LogicalPlan with MultiInstanceRelation{
 
   override def children: Seq[LogicalPlan] = Nil
 
-  override def newInstance(): RTreeRelation = {
+  override def newInstance(): B_RTreeRelation = {
     // TODO: the rand part should be replace by the RDD id of Index
-    RTreeRelation(output.map(_.newInstance()), child, table_name,
+    B_RTreeRelation(output.map(_.newInstance()), child, table_name,
       column_keys, index_name).asInstanceOf[this.type]
   }
 }

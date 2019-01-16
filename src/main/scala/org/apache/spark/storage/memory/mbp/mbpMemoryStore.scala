@@ -22,6 +22,7 @@ import org.apache.spark.memory.{MemoryManager, MemoryMode}
 import org.apache.spark.serializer.SerializerManager
 import org.apache.spark.storage.{BlockId, BlockInfoManager}
 import org.apache.spark.storage.memory.{BlockEvictionHandler, MemoryStore}
+import org.apache.spark.storage.memory.MemoryEntry
 
 class mbpMemoryStore(
                  conf: SparkConf,
@@ -31,6 +32,9 @@ class mbpMemoryStore(
                  blockEvictionHandler: BlockEvictionHandler)
   extends MemoryStore (conf, blockInfoManager, serializerManager,
     memoryManager, blockEvictionHandler: BlockEvictionHandler) {
+  // TODO: load the thres from index or config
+  private val entries= new spatialPQ[BlockId, MemoryEntry[_]](10,10)
+  // TODO: implement this
   override def evictBlocksToFreeSpace(blockId: Option[BlockId],
                                       space: Long,
                                       memoryMode: MemoryMode): Long =

@@ -21,7 +21,7 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.sql.internal._
 import org.apache.spark.{SparkConf, SparkContext, SparkEnv}
 import org.apache.spark.sql.{SparkSession, SparkSessionExtensions}
-import org.apache.spark.sql.mbp.relation.mbpOptimizer
+import org.apache.spark.sql.mbp.index.mbpOptimizer
 import org.apache.spark.sql.catalyst.parser.mbp.mbpCatalystSqlParser
 //import org.apache.spark.sql.mbp.relation.B_RTreeRelationScanStrategy
 import org.apache.spark.storage.mbp.mbpBlockManager
@@ -32,8 +32,8 @@ The only interface to interact with spark
 
 object SessionProvider {
   val pvd=new SessionProvider()
-  def getSession(conf:SparkConf):SparkSession=pvd.getOrInit(conf)
-  def getSession():SparkSession=pvd.get()
+  def getOrCreateSession(conf:SparkConf):SparkSession=pvd.getOrInit(conf)
+  def getOrCreateSession():SparkSession=pvd.get()
 }
 
 class SessionProvider private(var ss: SparkSession=null) extends Logging{
@@ -77,10 +77,14 @@ class SessionProvider private(var ss: SparkSession=null) extends Logging{
 
       // evil replacement
       val env=SparkEnv.get
+//      println(env.blockManager.diskBlockManager.localDirs.toList)
+//      println(env.executorId)
+      val newbm = mbpBlockManager.create(env.blockManager)
       val newenv=new SparkEnv(env.executorId,env.rpcEnv,env.serializer,env.closureSerializer,env.serializerManager,
-        env.mapOutputTracker,env.shuffleManager,env.broadcastManager,mbpBlockManager.create(env.blockManager),env.securityManager,
+        env.mapOutputTracker,env.shuffleManager,env.broadcastManager,newbm,env.securityManager,
         env.metricsSystem,env.memoryManager,env.outputCommitCoordinator,env.conf)
       SparkEnv.set(newenv)
+//      println(newenv.blockManager.diskBlockManager.localDirs.toList)
     }
     ss
   }

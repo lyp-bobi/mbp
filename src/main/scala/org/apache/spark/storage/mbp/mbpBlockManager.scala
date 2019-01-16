@@ -16,18 +16,48 @@
  */
 package org.apache.spark.storage.mbp
 
-import scala.reflect.ClassTag
-import org.apache.spark.{MapOutputTracker, SecurityManager, SparkConf, SparkEnv}
-import org.apache.spark.memory.MemoryManager
-import org.apache.spark.network.BlockTransferService
-import org.apache.spark.rpc.RpcEnv
-import org.apache.spark.serializer.SerializerManager
-import org.apache.spark.shuffle.ShuffleManager
-import org.apache.spark.storage.memory.mbp.mbpMemoryStore
-import org.apache.spark.storage.{BlockId, BlockManager, BlockManagerMaster, BlockResult}
-import org.apache.spark.scheduler.{SparkListener, SparkListenerExecutorAdded}
-import org.apache.spark.internal.Logging
 
+import org.apache.spark.storage._
+import org.apache.spark.storage.memory.mbp.mbpMemoryStore
+
+import org.apache.spark._
+import org.apache.spark.internal.{config, Logging}
+import org.apache.spark.memory.{MemoryManager, MemoryMode}
+
+import org.apache.spark.network._
+
+import org.apache.spark.rpc.RpcEnv
+import org.apache.spark.serializer.{SerializerInstance, SerializerManager}
+import org.apache.spark.shuffle.ShuffleManager
+import org.apache.spark.storage.memory._
+
+import org.apache.spark.util._
+
+
+object mbpBlockManager extends Logging{
+  private val ID_GENERATOR = new IdGenerator
+  def create(bm: BlockManager) : BlockManager = {
+    val env = SparkEnv.get
+    logInfo("mbpBlockManager start at "+env.executorId)
+    var cores = 1
+    //bobi:Not sure if i get the right numOfCores
+    if(env.executorId=="driver"){
+      cores=env.conf.getInt("spark.driver.cores",0)
+    }
+    else{
+      cores=env.conf.getInt("spark.executor.cores",0)
+    }
+
+
+
+    bm.stop()
+
+    val newbm = new mbpBlockManager(env.executorId, env.rpcEnv, bm.master, bm.serializerManager, bm.conf, env.memoryManager, env.mapOutputTracker,
+      env.shuffleManager, bm.blockTransferService, env.securityManager, cores)
+    newbm.initialize(env.conf.getAppId)
+    newbm
+  }
+}
 
 class mbpBlockManager(
                        executorId: String,
@@ -41,23 +71,15 @@ class mbpBlockManager(
                        override val blockTransferService: BlockTransferService,
                        securityManager: SecurityManager,
                        numUsableCores: Int)
-  extends BlockManager(
+  extends BlockManager (
     executorId, rpcEnv, master, serializerManager, conf: SparkConf,
     memoryManager, mapOutputTracker, shuffleManager, blockTransferService,
-    securityManager, numUsableCores) {
-  override def get[T: ClassTag](blockId: BlockId): Option[BlockResult] = super.get(blockId)
-  override val memoryStore =
+    securityManager, numUsableCores) with BlockDataManager with BlockEvictionHandler with Logging{
+  // Actual storage of where blocks are kept
+  private[spark] override val memoryStore =
     new mbpMemoryStore(conf, blockInfoManager, serializerManager, memoryManager, this)
+  memoryManager.setMemoryStore(memoryStore)
 }
-object mbpBlockManager extends Logging{
-  def create(bm: BlockManager) : BlockManager = {
-    val env = SparkEnv.get
-    var cores = 1
-    logInfo("mbpBlockManager Started")
-    //TODO: find the cores that are usable
-    //bm.conf.getOption("spark.executor.cores")//bobi: I'm really not sure if this would work or not
-    new mbpBlockManager(env.executorId, env.rpcEnv, bm.master, bm.serializerManager, bm.conf, env.memoryManager, env.mapOutputTracker,
-      env.shuffleManager, bm.blockTransferService, env.securityManager, cores)
 
-  }
-}
+
+
