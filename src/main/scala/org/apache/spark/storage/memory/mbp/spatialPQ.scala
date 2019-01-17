@@ -6,7 +6,6 @@ import org.apache.spark.sql.mbp.udt.stRange
 import scala.collection.mutable
 import org.apache.spark.internal.Logging
 
-import scala.collection.mutable
 
 
 // visit of an element would prevent elements "near" enough from being evicted
@@ -16,26 +15,28 @@ private[spark] case class spatialPQ[A,B](spatial_thres:Double,temporal_thres:Dou
   val neighbours= new mutable.HashMap[A,mutable.MutableList[A]]()
   def moveToTail(key:A): Unit ={
     var last:Entry = lastEntry
-    if(lastEntry.key != key){
+    if(lastEntry!=null && lastEntry.key != key){
       var p = findEntry(key)
-      var b=p.earlier
-      var a=p.later
-      p.later = null
-      if (b == null)
-        firstEntry = a
-      else
-        b.later = a
-      if (a != null)
-        a.earlier = b
-      else
-        last = b
-      if (last == null)
-        firstEntry = p
-      else {
-        p.earlier = last
-        last.earlier = p
+      if(p!=null){
+        var b=p.earlier
+        var a=p.later
+        p.later = null
+        if (b == null)
+          firstEntry = a
+        else
+          b.later = a
+        if (a != null)
+          a.earlier = b
+        else
+          last = b
+        if (last == null)
+          firstEntry = p
+        else {
+          p.earlier = last
+          last.earlier = p
+        }
+        lastEntry = p
       }
-      lastEntry = p
     }
 
   }

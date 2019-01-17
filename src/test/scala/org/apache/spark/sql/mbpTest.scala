@@ -4,6 +4,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest.FunSuite
 import org.scalatest.BeforeAndAfter
 import org.apache.spark.sql.mbp.SessionProvider
+import org.apache.spark.storage.StorageLevel
 /*
 Procedure:
   1. load a file with (id,x,y,t)
@@ -29,6 +30,7 @@ class mbpTest extends FunSuite with BeforeAndAfter{
   // TODO: Test the Session Provider
   test("BoomBoomPow"){
     val df=ss.read.csv("/home/chuang/43676060.csv")
+    df.persist(StorageLevel.DISK_ONLY)
     df.count()
   }
 }
