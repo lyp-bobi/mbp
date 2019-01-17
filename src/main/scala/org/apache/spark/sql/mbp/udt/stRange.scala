@@ -1,7 +1,9 @@
 package org.apache.spark.sql.mbp.udt
 
 
-class stRange(var xlow:Double,var xhigh:Double,var ylow:Double,var yhigh:Double,var tlow:Double,var thigh:Double){
+class stRange(var xlow:Double,var xhigh:Double,var ylow:Double,var yhigh:Double,var tlow:Double,var thigh:Double)
+  extends Feature{
+  override val dimensions: Int = 3
   def distToVisit(range:stRange): (Double,Double) ={
     //return (spatial dist,time dist)
     var s=0d

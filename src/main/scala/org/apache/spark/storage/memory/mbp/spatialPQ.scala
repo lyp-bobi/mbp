@@ -10,7 +10,7 @@ import scala.collection.mutable
 
 
 // visit of an element would prevent elements "near" enough from being evicted
-case class spatialPQ[A,B](spatial_thres:Double,temporal_thres:Double)
+private[spark] case class spatialPQ[A,B](spatial_thres:Double,temporal_thres:Double)
   extends mutable.LinkedHashMap[A,B] with Logging {
   val locs= new mutable.HashMap[A,stRange]()
   val neighbours= new mutable.HashMap[A,mutable.MutableList[A]]()
@@ -63,6 +63,11 @@ case class spatialPQ[A,B](spatial_thres:Double,temporal_thres:Double)
     })
     neighbours.put(key,neighList)
     super.put(key,value)
+  }
+  override def remove(key:A):Option[B]={
+    locs.remove(key)
+    neighbours.remove(key)
+    super.remove(key)
   }
   override def clear(): Unit ={
     locs.clear()
