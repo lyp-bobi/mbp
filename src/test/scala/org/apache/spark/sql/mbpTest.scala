@@ -3,7 +3,7 @@ package org.apache.spark.sql
 import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest.FunSuite
 import org.scalatest.BeforeAndAfter
-import org.apache.spark.sql.mbp.SessionProvider
+import org.apache.spark.sql.mbp.{SessionProvider, mbpContext}
 import org.apache.spark.storage.StorageLevel
 /*
 Procedure:
@@ -22,9 +22,11 @@ Procedure:
  */
 
 class mbpTest extends FunSuite with BeforeAndAfter{
+  var sc:SparkContext=_
   var ss:SparkSession=_
   before{
-    val conf = new SparkConf().setMaster("local[*]").setAppName("test")
+    val conf = new SparkConf().setMaster("local").setAppName("test")
+    sc= new mbpContext(conf)
     ss= SessionProvider.getOrCreateSession(conf)
   }
   // TODO: Test the Session Provider

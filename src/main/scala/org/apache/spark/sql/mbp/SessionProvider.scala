@@ -19,12 +19,14 @@ package org.apache.spark.sql.mbp
 
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.internal._
-import org.apache.spark.{SparkConf, SparkContext, SparkEnv}
+import org.apache.spark.{SparkConf, SparkContext, SparkEnv,ExecutorAllocationClient}
+import org.apache.spark.scheduler.local.LocalSchedulerBackend
 import org.apache.spark.sql.{SparkSession, SparkSessionExtensions}
 import org.apache.spark.sql.mbp.index.mbpOptimizer
 import org.apache.spark.sql.catalyst.parser.mbp.mbpCatalystSqlParser
 //import org.apache.spark.sql.mbp.relation.B_RTreeRelationScanStrategy
 import org.apache.spark.storage.mbp.mbpBlockManager
+import org.apache.spark.launcher.SparkAppHandle
 
 /*
 The only interface to interact with spark
@@ -55,7 +57,6 @@ class SessionProvider private(var ss: SparkSession=null) extends Logging{
     if(ss==null){
       val sc = SparkContext.getOrCreate(conf)
       val oldss = SparkSession.getDefaultSession
-      val extension = new SparkSessionExtensions
       def injection(extensions:SparkSessionExtensions):Unit = {
         // use a self defined parser to parse the sql trees
         extensions.injectParser((_, _) => mbpCatalystSqlParser)
@@ -75,16 +76,6 @@ class SessionProvider private(var ss: SparkSession=null) extends Logging{
           .getOrCreate()
       }
 
-      // evil replacement
-      val env=SparkEnv.get
-//      println(env.blockManager.diskBlockManager.localDirs.toList)
-//      println(env.executorId)
-      val newbm = mbpBlockManager.create(env.blockManager)
-      val newenv=new SparkEnv(env.executorId,env.rpcEnv,env.serializer,env.closureSerializer,env.serializerManager,
-        env.mapOutputTracker,env.shuffleManager,env.broadcastManager,newbm,env.securityManager,
-        env.metricsSystem,env.memoryManager,env.outputCommitCoordinator,env.conf)
-      SparkEnv.set(newenv)
-//      println(newenv.blockManager.diskBlockManager.localDirs.toList)
     }
     ss
   }

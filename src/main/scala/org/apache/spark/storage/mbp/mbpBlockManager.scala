@@ -33,32 +33,6 @@ import org.apache.spark.storage.memory._
 
 import org.apache.spark.util._
 
-
-object mbpBlockManager extends Logging{
-  private val ID_GENERATOR = new IdGenerator
-  def create(bm: BlockManager) : BlockManager = {
-    val env = SparkEnv.get
-    logInfo("mbpBlockManager start at "+env.executorId)
-    var cores = 1
-    //bobi:Not sure if i get the right numOfCores
-    if(env.executorId=="driver"){
-      cores=env.conf.getInt("spark.driver.cores",0)
-    }
-    else{
-      cores=env.conf.getInt("spark.executor.cores",0)
-    }
-
-
-
-    bm.stop()
-
-    val newbm = new mbpBlockManager(env.executorId, env.rpcEnv, bm.master, bm.serializerManager, bm.conf, env.memoryManager, env.mapOutputTracker,
-      env.shuffleManager, bm.blockTransferService, env.securityManager, cores)
-    newbm.initialize(env.conf.getAppId)
-    newbm
-  }
-}
-
 class mbpBlockManager(
                        executorId: String,
                        rpcEnv: RpcEnv,
