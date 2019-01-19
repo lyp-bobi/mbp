@@ -19,7 +19,7 @@ import org.apache.spark.storage._
 import org.apache.spark.storage.mbp.mbpBlockManager
 import org.apache.spark.util.{RpcUtils, Utils}
 
-class mbpContext(val config:SparkConf) extends SparkContext(config) with Logging {
+class MBPContext(val config:SparkConf) extends SparkContext(config) with Logging {
 
   private[spark] override def createSparkEnv(
                                               conf: SparkConf,
