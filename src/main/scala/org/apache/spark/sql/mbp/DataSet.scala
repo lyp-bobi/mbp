@@ -6,8 +6,9 @@ import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.catalyst.plans.logical._
 import org.apache.spark.sql.{Encoder, Row, SparkSession, Dataset => SQLDataset}
 import org.apache.spark.sql.mbp.execution.QueryExecution
-import org.apache.spark.sql.mbp.spatial.Point
+import org.apache.spark.sql.mbp.spatial.Trajectory
 import org.apache.spark.sql.mbp.expression._
+import org.apache.spark.sql.mbp.util.LiteralUtil
 
 private[mbp] object Dataset {
   def apply[T: Encoder](mbpSession: MBPSession, logicalPlan: LogicalPlan): Dataset[T] = {
@@ -39,13 +40,13 @@ class Dataset[T] private[mbp] (@transient val mbpSession: MBPSession,
     *   trajectory.filter($"x" >= 10 && $"x" <= 20 && $"y" >= 10 && $"y" <= 20)
     * }}}
     */
-  def range(keys: Array[String], traj1: Array[Point], traj2: Array[Point]): DataFrame = withPlan {
+  def range(keys: Array[String], traj1: Trajectory, traj2: Trajectory): DataFrame = withPlan {
     val attrs = getAttributes(keys)
     attrs.foreach(attr => assert(attr != null, "column not found"))
 
-    Filter(InRange(PointWrapper(attrs),
-      LiteralUtil(new Point(point1)),
-      LiteralUtil(new Point(point2))), logicalPlan)
+    Filter(InRange(TrajectoryWrapper(attrs),
+      LiteralUtil(traj1),
+      LiteralUtil(traj2), logicalPlan))
   }
 
   /**

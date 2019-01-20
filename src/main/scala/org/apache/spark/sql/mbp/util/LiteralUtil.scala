@@ -15,29 +15,17 @@
  *
  */
 
-package org.apache.spark.sql.mbp.spatial
+package org.apache.spark.sql.mbp.util
 
-import com.vividsolutions.jts.geom.{Geometry, Polygon => JTSPolygon}
-import org.apache.spark.sql.simba.ShapeType
-import org.apache.spark.sql.types.SQLUserDefinedType
-
+import org.apache.spark.sql.catalyst.expressions.Literal
+import org.apache.spark.sql.mbp.spatial.Shape
+import org.apache.spark.sql.mbp.ShapeType
 /**
-  * Created by dong on 3/16/16.
+  * Created by dongx on 11/14/2016.
   */
-//@SQLUserDefinedType(udt = classOf[ShapeType])
-abstract class Shape extends Serializable {
-  def minDist(other: Shape): Double
-
-  def intersects(other: Shape): Boolean
-
-  def getMBR: MBR
-
-  val dimensions: Int
-}
-
-/*object Shape {
-  final def apply(g: Geometry): Shape = g match {
-    case jtsPolygon : JTSPolygon => new Polygon(jtsPolygon)
-    case _ => null
+object LiteralUtil {
+  def apply(v: Any): Literal = v match {
+    case s: Shape => Literal.create(v, ShapeType)
+    case _ => Literal(v)
   }
-}*/
+}

@@ -17,14 +17,14 @@
 
 package org.apache.spark.sql.mbp.spatial
 
-import org.apache.spark.sql.simba.ShapeType
+//import org.apache.spark.sql.simba.ShapeType
 import org.apache.spark.sql.types.SQLUserDefinedType
 
 /**
  * Created by dong on 1/15/16.
  * Multi-Dimensional Minimum Bounding Box
  */
-@SQLUserDefinedType(udt = classOf[ShapeType])
+//@SQLUserDefinedType(udt = classOf[ShapeType])
 case class MBR(low: Point, high: Point) extends Shape {
   require(low.dimensions == high.dimensions)
   require(low <= high)
@@ -35,9 +35,9 @@ case class MBR(low: Point, high: Point) extends Shape {
     other match {
       case p: Point => contains(p)
       case mbr: MBR => intersects(mbr)
-      case cir: Circle => cir.intersects(this)
-      case poly: Polygon => poly.intersects(this)
-      case seg: LineSegment => seg.intersects(this)
+      //case cir: Circle => cir.intersects(this)
+      //case poly: Polygon => poly.intersects(this)
+      //case seg: LineSegment => seg.intersects(this)
     }
   }
 
@@ -45,9 +45,9 @@ case class MBR(low: Point, high: Point) extends Shape {
     other match {
       case p: Point => minDist(p)
       case mbr: MBR => minDist(mbr)
-      case cir: Circle => cir.minDist(this)
-      case poly: Polygon => poly.minDist(this)
-      case seg: LineSegment => seg.minDist(this)
+      //case cir: Circle => cir.minDist(this)
+      //case poly: Polygon => poly.minDist(this)
+      //case seg: LineSegment => seg.minDist(this)
     }
   }
 
