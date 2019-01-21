@@ -40,10 +40,13 @@ class Dataset[T] private[mbp] (@transient val mbpSession: MBPSession,
     *   trajectory.filter($"x" >= 10 && $"x" <= 20 && $"y" >= 10 && $"y" <= 20)
     * }}}
     */
-  def range(keys: Array[String], traj1: Trajectory, traj2: Trajectory): DataFrame = withPlan {
-    val attrs = getAttributes(keys)
-    attrs.foreach(attr => assert(attr != null, "column not found"))
+  def range(traj1: Trajectory, traj2: Trajectory): DataFrame = withPlan {
+    //val attrs = getAttributes(keys)
+    //attrs.foreach(attr => assert(attr != null, "column not found"))
 
+    //Filter(InRange(TrajectoryWrapper(attrs),
+    //  LiteralUtil(traj1),
+    //  LiteralUtil(traj2)), logicalPlan)
     Filter(InRange(TrajectoryWrapper(attrs),
       LiteralUtil(traj1),
       LiteralUtil(traj2)), logicalPlan)

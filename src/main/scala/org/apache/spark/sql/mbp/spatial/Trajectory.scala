@@ -16,3 +16,9 @@ case class Trajectory(points: Array[Point]) extends Shape {
   override val dimensions: Int = 1
 
 }
+
+object Trajectory{
+  def apply(points:Array[Point]):Trajectory={
+    new Trajectory(points)
+  }
+}

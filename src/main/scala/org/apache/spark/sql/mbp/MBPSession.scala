@@ -57,4 +57,5 @@ object MBPSession{
     userSuppliedContext = Option(sparkContext)
     this
   }
+
 }
