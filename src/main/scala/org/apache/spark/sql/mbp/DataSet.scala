@@ -46,7 +46,7 @@ class Dataset[T] private[mbp] (@transient val mbpSession: MBPSession,
 
     Filter(InRange(TrajectoryWrapper(attrs),
       LiteralUtil(traj1),
-      LiteralUtil(traj2), logicalPlan))
+      LiteralUtil(traj2)), logicalPlan)
   }
 
   /**
@@ -55,14 +55,6 @@ class Dataset[T] private[mbp] (@transient val mbpSession: MBPSession,
     *   point.range(p, Array(10, 10), Array(20, 20))
     * }}}
     */
-  def range(key: String, point1: Array[Point], point2: Array[Point]): DataFrame = withPlan {
-    val attrs = getAttributes(Array(key))
-    assert(attrs.head != null, "column not found")
-
-    Filter(InRange(attrs.head,
-      LiteralUtil(new Point(point1)),
-      LiteralUtil(new Point(point2))), logicalPlan)
-  }
 
   private def getAttributes(keys: Array[String], attrs: Seq[Attribute] = this.queryExecution.analyzed.output)
   : Array[Attribute] = {

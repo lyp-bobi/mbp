@@ -15,30 +15,16 @@
  *
  */
 
-package org.apache.spark.sql.simba
+package org.apache.spark.sql.mbp
 
-import org.apache.spark.sql.types._
-import org.apache.spark.sql.simba.spatial.Shape
-import org.apache.spark.sql.catalyst.util.{GenericArrayData, ArrayData}
+import org.apache.spark.sql.types.ArrayType
 
 /**
   * Created by dongx on 11/10/16.
   */
-private[simba] class ShapeType extends UserDefinedType[Shape] {
-  override def sqlType: DataType = ArrayType(ByteType, containsNull = false)
+private[mbp] class ShapeType extends ArrayType {
 
-  override def serialize(s: Shape): Any = {
-    new GenericArrayData(ShapeSerializer.serialize(s))
-  }
 
-  override def userClass: Class[Shape] = classOf[Shape]
-
-  override def deserialize(datum: Any): Shape = {
-    datum match {
-      case values: ArrayData =>
-        ShapeSerializer.deserialize(values.toByteArray)
-    }
-  }
 }
 
 case object ShapeType extends ShapeType

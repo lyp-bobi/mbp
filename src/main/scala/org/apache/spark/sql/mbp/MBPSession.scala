@@ -6,7 +6,7 @@ import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 class MBPSession private[mbp](@transient val mbpContext: MBPContext)
   extends SparkSession(mbpContext){
   self=>
-  protected[simba] val indexManager: IndexManager = new IndexManager
+  protected[mbp] val indexManager: IndexManager = new IndexManager
 
   def executePlan(plan: LogicalPlan)= new execution.QueryExecution(self, plan)
 
@@ -42,12 +42,19 @@ class MBPSession private[mbp](@transient val mbpContext: MBPContext)
   def clearIndex(): Unit = sessionState.indexManager.clearIndex()
   */
   object mbpImplicits extends Serializable {
-    protected[mbp] def _simbaContext: SparkSession = self
+    protected[mbp] def _mbpContext: SparkSession = self
 
     implicit def datasetToMBPDataSet[T : Encoder](ds: SQLDataset[T]): Dataset[T] =
       Dataset(self, ds.queryExecution.logical)
 
-    implicit def dataframeToMBPDataFrame(df: SQLDataFrame): SQLDataFrame =
+    implicit def dataframeToMBPDataFrame(df: SQLDataFrame): DataFrame =
       Dataset.ofRows(self, df.queryExecution.logical)
+  }
+}
+
+object MBPSession{
+  private[spark] def sparkContext(sparkContext: MBPContext): Builder = synchronized {
+    userSuppliedContext = Option(sparkContext)
+    this
   }
 }

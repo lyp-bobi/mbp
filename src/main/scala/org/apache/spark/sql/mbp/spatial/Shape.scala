@@ -17,9 +17,7 @@
 
 package org.apache.spark.sql.mbp.spatial
 
-import com.vividsolutions.jts.geom.{Geometry, Polygon => JTSPolygon}
-import org.apache.spark.sql.simba.ShapeType
-import org.apache.spark.sql.types.SQLUserDefinedType
+//import com.vividsolutions.jts.geom.{Geometry, Polygon => JTSPolygon}
 
 /**
   * Created by dong on 3/16/16.
