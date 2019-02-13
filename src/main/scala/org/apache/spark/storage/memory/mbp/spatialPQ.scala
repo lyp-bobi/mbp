@@ -41,14 +41,16 @@ private[spark] case class spatialPQ[A,B](spatial_thres:Double,temporal_thres:Dou
 
   }
   override def get(key: A): Option[B] ={
-    for (nei <- neighbours.get(key)){
-      moveToTail(key)
+    if (neighbours.get(key).isDefined){
+      for (nei <- neighbours(key)){
+        moveToTail(nei)
+      }
     }
     moveToTail(key)
     super.get(key)
   }
   override def put(key:A,value:B): Option[B] ={
-    logWarning("Inserting a block without spatial infomation")
+    logInfo("Inserting a block without spatial infomation")
     super.put(key,value)
   }
   def put(key:A,value:B,range:stRange):Option[B]={
