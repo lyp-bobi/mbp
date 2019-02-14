@@ -167,6 +167,12 @@ statement
     | SET ROLE .*?                                                     #failNativeCommand
     | SET .*?                                                          #setConfiguration
     | RESET                                                            #resetConfiguration
+    //===mbp===
+    | CREATE STINDEX indexIdentifier=identifier ON
+        tableIdentifier '(' column=identifier ')'                      #createSTIndex
+    | DROP STINDEX indexIdentifier=identifier ON tableIdentifier       #dropSTIndex
+    | SHOW STINDEXES                                                   #showSTIndexes
+    //===mbp===
     | unsupportedHiveNativeCommands .*?                                #failNativeCommand
     ;
 
@@ -555,10 +561,44 @@ predicate
     | IS NOT? kind=NULL
     | IS NOT? kind=DISTINCT FROM right=valueExpression
     ;
-// TODO: need more thought
+
+//===mbp===s
+
+INRANGE: 'INRANGE';
+INKNN: 'KNN';
+POINT: 'POINT';
+TRAJ: 'TRAJ';
+STINDEX: 'STINDEX';
+STINDEXES: 'STINDEXES';
+INTEGRAL: 'INTEGRAL';
+DTW: 'DTW';
+
+trajSimilarityFunction
+    : DTW
+    | INTEGRAL
+    ;
+pointExpression
+    : POINT '(' coords+=number (',' coords+=number)* ')'
+    ;
+trajExpression
+    : TRAJ '(' points+=pointExpression (',' points+=pointExpression)* ')'
+    ;
+trajSimilarityExpression
+    : function=trajSimilarityFunction '(' leftTable=primaryExpression ',' rightTable=primaryExpression ')'
+    | function=trajSimilarityFunction '(' leftTrajectory=trajExpression ',' rightTable=primaryExpression ')'
+    | function=trajSimilarityFunction '(' leftTable=primaryExpression ',' rightTrajectory=trajExpression ')'
+    ;
+
+//===mbp===e
 
 valueExpression
-    : primaryExpression                                                                      #valueExpressionDefault
+    //===mbp===s
+    : trajSimilarityExpression LTE threshold=number                                          #trajThreshold
+    | trajSimilarityExpression INKNN count=number                                            #trajKNN
+    | leftTable=primaryExpression INRANGE '(' lowPoint=pointExpression
+        ',' highPoint=pointExpression ')'                                                    #trajRange
+    //===mbp===e
+    | primaryExpression                                                                      #valueExpressionDefault
     | operator=(MINUS | PLUS | TILDE) valueExpression                                        #arithmeticUnary
     | left=valueExpression operator=(ASTERISK | SLASH | PERCENT | DIV) right=valueExpression #arithmeticBinary
     | left=valueExpression operator=(PLUS | MINUS | CONCAT_PIPE) right=valueExpression       #arithmeticBinary
@@ -566,8 +606,6 @@ valueExpression
     | left=valueExpression operator=HAT right=valueExpression                                #arithmeticBinary
     | left=valueExpression operator=PIPE right=valueExpression                               #arithmeticBinary
     | left=valueExpression comparisonOperator right=valueExpression                          #comparison
-    | trajectorySimilarityExpression LTE threshold=number                                    #trajectorySimilarityWithThreshold
-    | trajectorySimilarityExpression KNN count=number                                        #trajectorySimilarityWithKNN
     ;
 
 primaryExpression
@@ -592,26 +630,6 @@ primaryExpression
     | base=primaryExpression '.' fieldName=identifier                                          #dereference
     | '(' expression ')'                                                                       #parenthesizedExpression
     ;
-
-// Trajectory Similarity Functions
-trajectorySimilarityFunction
-    : DTW
-    ;
-
-trajectorySimilarityExpression
-    : function=trajectorySimilarityFunction '(' leftTable=primaryExpression ',' rightTable=primaryExpression ')'
-    | function=trajectorySimilarityFunction '(' leftTrajectory=trajectoryExpression ',' rightTable=primaryExpression ')'
-    | function=trajectorySimilarityFunction '(' leftTable=primaryExpression ',' rightTrajectory=trajectoryExpression ')'
-    ;
-
-pointExpression
-    : POINT '(' coords+=number (',' coords+=number)* ')'
-    ;
-
-trajectoryExpression
-    : TRAJECTORY '(' points+=pointExpression (',' points+=pointExpression)* ')'
-    ;
-
 
 constant
     : NULL                                                                                     #nullLiteral
@@ -1009,6 +1027,7 @@ OPTION: 'OPTION';
 ANTI: 'ANTI';
 LOCAL: 'LOCAL';
 INPATH: 'INPATH';
+
 
 STRING
     : '\'' ( ~('\''|'\\') | ('\\' .) )* '\''
