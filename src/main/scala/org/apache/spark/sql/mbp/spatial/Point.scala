@@ -17,7 +17,7 @@
 
 package org.apache.spark.sql.mbp.spatial
 
-import org.apache.spark.sql.simba.ShapeType
+import org.apache.spark.sql.mbp.ShapeType
 import org.apache.spark.sql.types.SQLUserDefinedType
 
 /**

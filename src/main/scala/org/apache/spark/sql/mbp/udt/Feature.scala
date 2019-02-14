@@ -29,6 +29,29 @@ abstract class Feature extends Serializable  {
   val dimensions: Int
 }
 
+object FeatureType extends UserDefinedType[Feature]{
+  val kryo=new Kryo()
+  override def sqlType: DataType = ArrayType(ByteType, containsNull = false)
+  override def userClass: Class[Feature] = classOf[Feature]
+  override def serialize(p: Feature): GenericInternalRow = {
+    val out = new ByteArrayOutputStream()
+    val output = new Output(out)
+    kryo.writeObject(output, p)
+    output.close()
+    new GenericInternalRow(Array[Any](out.toByteArray))
+
+  }
+
+  override def deserialize(datum: Any): Feature = {
+    val arr=datum.asInstanceOf[InternalRow]
+    val raw = arr.getBinary(0)
+    val in = new ByteArrayInputStream(raw)
+    val input = new Input(in)
+    val resx = kryo.readObject(input, classOf[Feature])
+    resx
+  }
+}
+
 class FeatureType extends UserDefinedType[Feature]{
   val kryo=new Kryo()
   override def sqlType: DataType = ArrayType(ByteType, containsNull = false)
