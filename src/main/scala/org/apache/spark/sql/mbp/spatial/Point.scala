@@ -17,36 +17,30 @@
 
 package org.apache.spark.sql.mbp.spatial
 
-import org.apache.spark.sql.mbp.ShapeType
+import org.apache.spark.sql.mbp.udt.{Feature,FeatureType}
 import org.apache.spark.sql.types.SQLUserDefinedType
 
 /**
  * Created by dong on 1/15/16.
  * Multi-Dimensional Point
  */
-//@SQLUserDefinedType(udt = classOf[ShapeType])
-case class Point(coord: Array[Double]) extends Shape {
+@SQLUserDefinedType(udt = classOf[FeatureType])
+case class Point(coord: Array[Double]) extends Feature {
   override val dimensions: Int = coord.length
 
   def this() = this(Array())
 
-  override def intersects(other: Shape): Boolean = {
+  override def intersects(other: Feature): Boolean = {
     other match {
       case p: Point => p == this
       case mbr: MBR => mbr.contains(this)
-      //case cir: Circle => cir.contains(this)
-      //case poly: Polygon => poly.contains(this)
-      //case seg: LineSegment => seg.contains(this)
     }
   }
 
-  override def minDist(other: Shape): Double = {
+  override def minDist(other: Feature): Double = {
     other match {
       case p: Point => minDist(p)
       case mbr: MBR => mbr.minDist(this)
-      //case cir: Circle => cir.minDist(this)
-      //case poly: Polygon => poly.minDist(this)
-      //case seg: LineSegment => seg.minDist(this)
     }
   }
 
@@ -84,7 +78,7 @@ case class Point(coord: Array[Double]) extends Shape {
     s + ")"
   }
 
-  def getMBR: MBR = MBR(this, this)
+  override def getMBR: MBR = MBR(this, this)
 }
 
 /*object Point{

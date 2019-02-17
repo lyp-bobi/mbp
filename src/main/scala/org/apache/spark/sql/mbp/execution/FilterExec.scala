@@ -22,12 +22,12 @@ import org.apache.spark.sql.catalyst.expressions.{Attribute, Expression, Literal
 import org.apache.spark.sql.catalyst.expressions.{SortOrder, And => SQLAnd, Not => SQLNot, Or => SQLOr}
 import org.apache.spark.sql.catalyst.plans.physical.Partitioning
 import org.apache.spark.sql.execution.SparkPlan
-import org.apache.spark.sql.mbp.spatial.{Point,Trajectory,MBR}
+import org.apache.spark.sql.mbp.udt.{Point,Trajectory,MBR}
 
 /**
   * Created by dongx on 11/13/2016.
   */
-case class FilterExec(condition: Expression, child: SparkPlan) extends MBPPlan with PredicateHelper {
+case class FilterExec(condition: Expression, child: SparkPlan) extends SparkPlan with PredicateHelper {
    override def output: Seq[Attribute] = child.output
 
   /*private class DistanceOrdering(point: Expression, target: Point) extends Ordering[InternalRow] {

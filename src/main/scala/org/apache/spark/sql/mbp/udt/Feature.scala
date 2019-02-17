@@ -26,6 +26,12 @@ import org.apache.spark.sql.types._
 import org.apache.spark.sql.catalyst.util.{ArrayData, GenericArrayData}
 
 abstract class Feature extends Serializable  {
+  //def minDist(other: Feature): Double
+
+  //def intersects(other: Feature): Boolean
+
+  //def getMBR: MBR
+
   val dimensions: Int
 }
 

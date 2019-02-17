@@ -1,6 +1,7 @@
 package org.apache.spark.sql.mbp.spatial
 
-case class Trajectory(points: Array[Point]) extends Shape {
+import org.apache.spark.sql.mbp.udt.Feature
+case class Trajectory(points: Array[Point]) extends Feature {
   override def minDist(other: Shape): Double={
 
   }

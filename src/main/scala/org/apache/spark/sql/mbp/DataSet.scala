@@ -6,7 +6,7 @@ import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.catalyst.plans.logical._
 import org.apache.spark.sql.{Encoder, Row, SparkSession, Dataset => SQLDataset}
 import org.apache.spark.sql.mbp.execution.QueryExecution
-import org.apache.spark.sql.mbp.spatial.{Point,Trajectory}
+import org.apache.spark.sql.mbp.udt.{Point,Trajectory}
 import org.apache.spark.sql.mbp.expression._
 import org.apache.spark.sql.mbp.util.LiteralUtil
 

@@ -5,6 +5,7 @@ import org.apache.spark.sql.{Encoder, SparkSession, Strategy, DataFrame => SQLDa
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.execution.{SparkPlan, SparkPlanner}
 import org.apache.spark.sql.mbp.execution.FilterExec
+import org.apache.spark.sql.mbp.execution.MBPFilter.planLater
 
 class MBPSession private[mbp](@transient val mbpContext: MBPContext)
   extends SparkSession(mbpContext){
@@ -12,8 +13,6 @@ class MBPSession private[mbp](@transient val mbpContext: MBPContext)
   protected[mbp] val indexManager: IndexManager = new IndexManager
 
   def executePlan(plan: LogicalPlan)= new execution.QueryExecution(self, plan)
-
-
 
 
   /*def indexTable(tableName: String, indexType: IndexType,
@@ -58,9 +57,10 @@ class MBPSession private[mbp](@transient val mbpContext: MBPContext)
 }
 
 object MBPSession{
-  private[spark] def sparkContext(sparkContext: MBPContext): Builder = synchronized {
-    userSuppliedContext = Option(sparkContext)
-    this
+  def setActiveSession(session: MBPSession): Unit = {
+    activeThreadSession.set(session)
   }
+
+  private val activeThreadSession = new InheritableThreadLocal[MBPSession]
 
 }

@@ -1,11 +1,12 @@
 package org.apache.spark.sql.mbp.execution
 
-import org.apache.spark.sql.{SparkSession, Strategy}
+import org.apache.spark.sql.{ExperimentalMethods, SparkSession, Strategy}
 import org.apache.spark.sql.catalyst.plans.logical
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.execution.{SparkPlan, SparkPlanner, QueryExecution => SQLQueryExecution}
+import org.apache.spark.sql.mbp.MBPSession
 
-class QueryExecution (val mbpSession:SparkSession, override val logical:LogicalPlan)
+class QueryExecution (val mbpSession:MBPSession, override val logical:LogicalPlan)
   extends SQLQueryExecution(mbpSession,logical) {
   /*lazy val withIndexedData: LogicalPlan = {
     assertAnalyzed()
@@ -16,9 +17,12 @@ class QueryExecution (val mbpSession:SparkSession, override val logical:LogicalP
     mbpSession.sessionState.optimizer.execute(withIndexedData)
   }*/
 
+
   override def planner: SparkPlanner = {
+    lazy val experimentalMethods = new ExperimentalMethods
+    experimentalMethods.extraStrategies = (MBPFilter::Nil)++experimentalMethods.extraStrategies
     new SparkPlanner(mbpSession.sparkContext, mbpSession.sqlContext.conf,
-     (MBPFilter::Nil)++mbpSession.sessionState.experimentalMethods.extraStrategies )
+      experimentalMethods )
   }
   override lazy val sparkPlan: SparkPlan ={
     MBPSession.setActiveSession(mbpSession)

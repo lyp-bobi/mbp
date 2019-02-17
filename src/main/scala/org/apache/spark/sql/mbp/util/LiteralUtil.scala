@@ -18,14 +18,13 @@
 package org.apache.spark.sql.mbp.util
 
 import org.apache.spark.sql.catalyst.expressions.Literal
-import org.apache.spark.sql.mbp.spatial.Shape
-import org.apache.spark.sql.mbp.ShapeType
+import org.apache.spark.sql.mbp.udt.{Feature,FeatureType}
 /**
   * Created by dongx on 11/14/2016.
   */
 object LiteralUtil {
   def apply(v: Any): Literal = v match {
-    case s: Shape => Literal.create(v, ShapeType)
+    case s: Feature => Literal.create(v, FeatureType)
     case _ => Literal(v)
   }
 }

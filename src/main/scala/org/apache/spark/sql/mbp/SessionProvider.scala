@@ -23,7 +23,7 @@ import org.apache.spark.{SparkConf, SparkContext, SparkEnv,ExecutorAllocationCli
 import org.apache.spark.scheduler.local.LocalSchedulerBackend
 import org.apache.spark.sql.{SparkSession, SparkSessionExtensions}
 import org.apache.spark.sql.mbp.index.mbpOptimizer
-import org.apache.spark.sql.catalyst.parser.mbp.mbpCatalystSqlParser
+//import org.apache.spark.sql.catalyst.parser.mbp.mbpCatalystSqlParser
 //import org.apache.spark.sql.mbp.relation.B_RTreeRelationScanStrategy
 import org.apache.spark.storage.mbp.mbpBlockManager
 import org.apache.spark.launcher.SparkAppHandle
@@ -59,7 +59,7 @@ class SessionProvider private(var ss: SparkSession=null) extends Logging{
       val oldss = SparkSession.getDefaultSession
       def injection(extensions:SparkSessionExtensions):Unit = {
         // use a self defined parser to parse the sql trees
-        extensions.injectParser((_, _) => mbpCatalystSqlParser)
+        //extensions.injectParser((_, _) => mbpCatalystSqlParser)
         // use a Rule to replace Relations with B_RTreeRelation at here
         extensions.injectOptimizerRule(mbpOptimizer)
         // implement the strategy that parse the B_RTreeRelation to B_RTreeRelationScan

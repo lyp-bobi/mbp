@@ -18,6 +18,7 @@
 package org.apache.spark.sql.mbp.spatial
 
 //import org.apache.spark.sql.simba.ShapeType
+import org.apache.spark.sql.mbp.udt.Feature
 import org.apache.spark.sql.types.SQLUserDefinedType
 
 /**
@@ -25,13 +26,13 @@ import org.apache.spark.sql.types.SQLUserDefinedType
  * Multi-Dimensional Minimum Bounding Box
  */
 //@SQLUserDefinedType(udt = classOf[ShapeType])
-case class MBR(low: Point, high: Point) extends Shape {
-  require(low.dimensions == high.dimensions)
-  require(low <= high)
-
+case class MBR(low: Point, high: Point) extends Feature {
+  //require(low.dimensions == high.dimensions)
+  //require(low <= high)
+`
   override val dimensions: Int = low.dimensions
 
-  override def intersects(other: Shape): Boolean = {
+  override def intersects(other: Feature): Boolean = {
     other match {
       case p: Point => contains(p)
       case mbr: MBR => intersects(mbr)
@@ -41,7 +42,7 @@ case class MBR(low: Point, high: Point) extends Shape {
     }
   }
 
-  override def minDist(other: Shape): Double = {
+  override def minDist(other: Feature): Double = {
     other match {
       case p: Point => minDist(p)
       case mbr: MBR => minDist(mbr)
