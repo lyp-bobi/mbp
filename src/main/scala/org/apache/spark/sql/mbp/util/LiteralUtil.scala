@@ -1,6 +1,5 @@
-
 /*
- * Copyright 2017 by mbp Project
+ * Copyright 2017 by Simba Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +14,17 @@
  * limitations under the License.
  *
  */
-package com.mbp.Feature
 
-case class MBR(low: Point, high: Point)  {
-  require(low.dimensions == high.dimensions)
-  def intersects(traj:Trajectory):Boolean={
-    true
+package org.apache.spark.sql.mbp.util
+
+import org.apache.spark.sql.catalyst.expressions.Literal
+import org.apache.spark.sql.mbp.udt.{Feature,FeatureType}
+/**
+  * Created by dongx on 11/14/2016.
+  */
+object LiteralUtil {
+  def apply(v: Any): Literal = v match {
+    case s: Feature => Literal.create(v, FeatureType)
+    case _ => Literal(v)
   }
-
 }

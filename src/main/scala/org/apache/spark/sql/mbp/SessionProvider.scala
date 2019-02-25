@@ -59,7 +59,7 @@ class SessionProvider private(var ss: SparkSession=null) extends Logging{
       val oldss = SparkSession.getDefaultSession
       def injection(extensions:SparkSessionExtensions):Unit = {
         // use a self defined parser to parse the sql trees
-        extensions.injectParser((_, _) => mbpCatalystSqlParser)
+        //extensions.injectParser((_, _) => mbpCatalystSqlParser)
         // use a Rule to replace Relations with B_RTreeRelation at here
         extensions.injectOptimizerRule(mbpOptimizer)
         // implement the strategy that parse the B_RTreeRelation to B_RTreeRelationScan

@@ -1,6 +1,5 @@
-
 /*
- * Copyright 2017 by mbp Project
+ * Copyright 2017 by Simba Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +14,28 @@
  * limitations under the License.
  *
  */
-package com.mbp.Feature
 
-case class MBR(low: Point, high: Point)  {
-  require(low.dimensions == high.dimensions)
-  def intersects(traj:Trajectory):Boolean={
-    true
-  }
+package org.apache.spark.sql.mbp.spatial
 
+//import com.vividsolutions.jts.geom.{Geometry, Polygon => JTSPolygon}
+
+/**
+  * Created by dong on 3/16/16.
+  */
+//@SQLUserDefinedType(udt = classOf[ShapeType])
+abstract class Shape extends Serializable {
+  def minDist(other: Shape): Double
+
+  def intersects(other: Shape): Boolean
+
+  def getMBR: MBR
+
+  val dimensions: Int
 }
+
+/*object Shape {
+  final def apply(g: Geometry): Shape = g match {
+    case jtsPolygon : JTSPolygon => new Polygon(jtsPolygon)
+    case _ => null
+  }
+}*/
