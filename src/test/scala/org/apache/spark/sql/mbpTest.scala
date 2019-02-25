@@ -1,9 +1,10 @@
 package org.apache.spark.sql
 
+import org.apache.spark.mbp.mbpContext
 import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest.FunSuite
 import org.scalatest.BeforeAndAfter
-import org.apache.spark.sql.mbp.{SessionProvider, mbpContext}
+import org.apache.spark.sql.mbp.SessionProvider
 import org.apache.spark.storage.StorageLevel
 /*
 Procedure:

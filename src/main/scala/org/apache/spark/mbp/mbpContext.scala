@@ -1,4 +1,4 @@
-package org.apache.spark.sql.mbp
+package org.apache.spark.mbp
 
 import java.util.Locale
 

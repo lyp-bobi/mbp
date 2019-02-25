@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package org.apache.spark.sql.mbp.udt
+package org.apache.spark.sql.catalyst.expression.mbp.udt
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 
@@ -23,7 +23,6 @@ import com.esotericsoftware.kryo.io.{Input, Output}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.catalyst.util.{ArrayData, GenericArrayData}
 
 abstract class Feature extends Serializable  {
   val dimensions: Int

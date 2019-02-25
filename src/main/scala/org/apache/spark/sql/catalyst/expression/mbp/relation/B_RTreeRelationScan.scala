@@ -15,14 +15,12 @@
  *
  */
 
-package org.apache.spark.sql.mbp.index
+package org.apache.spark.sql.catalyst.expression.mbp.relation
 
-import org.apache.spark.rdd.{PartitionPruningRDD, RDD}
+import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.catalyst.expressions.{Attribute, Expression, Literal, PredicateHelper, UnsafeProjection}
+import org.apache.spark.sql.catalyst.expressions.{Attribute, Expression, PredicateHelper}
 import org.apache.spark.sql.execution.SparkPlan
-import org.apache.spark.sql.Strategy
-import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 
 case class B_RTreeRelationScan(attributes: Seq[Attribute],
                           predicates: Seq[Expression],

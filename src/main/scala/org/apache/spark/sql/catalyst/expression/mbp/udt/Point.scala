@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2017 by mbp Project
  *
@@ -15,9 +14,11 @@
  * limitations under the License.
  *
  */
-package org.apache.spark.sql.mbp.udt
+package org.apache.spark.sql.catalyst.expression.mbp.udt
 
+class Point(coord: Array[Double]) extends Feature {
+  override val dimensions: Int = coord.length
+  def this() = this(Array())
 
-case class MBR(low: Point, high: Point)  {
-  require(low.dimensions == high.dimensions)
+//  override def getMBR: MBR = MBR(this, this)
 }

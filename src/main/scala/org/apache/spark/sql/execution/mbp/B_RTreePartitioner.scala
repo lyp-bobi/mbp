@@ -15,9 +15,9 @@
  *
  */
 
-package org.apache.spark.sql.mbp.partitioner
+package org.apache.spark.sql.execution.mbp
 
-import org.apache.spark.{Partitioner, SparkEnv}
+import org.apache.spark.Partitioner
 
 class B_RTreePartitioner(num_partitions: Int) extends Partitioner {
   override def numPartitions: Int = num_partitions

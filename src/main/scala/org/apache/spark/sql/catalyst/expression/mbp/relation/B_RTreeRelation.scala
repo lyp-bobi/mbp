@@ -15,13 +15,12 @@
  *
  */
 
-package org.apache.spark.sql.mbp.index
+package org.apache.spark.sql.catalyst.expression.mbp.relation
 
 import org.apache.spark.sql.catalyst.analysis.MultiInstanceRelation
 import org.apache.spark.sql.catalyst.expressions.Attribute
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.execution.SparkPlan
-import org.apache.spark.storage.StorageLevel
 
 //I think maybe we don't have to use Relation( =  local index)
 

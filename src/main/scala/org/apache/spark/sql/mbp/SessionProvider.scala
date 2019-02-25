@@ -19,11 +19,11 @@ package org.apache.spark.sql.mbp
 
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.internal._
-import org.apache.spark.{SparkConf, SparkContext, SparkEnv,ExecutorAllocationClient}
+import org.apache.spark.{ExecutorAllocationClient, SparkConf, SparkContext, SparkEnv}
 import org.apache.spark.scheduler.local.LocalSchedulerBackend
 import org.apache.spark.sql.{SparkSession, SparkSessionExtensions}
-import org.apache.spark.sql.mbp.index.mbpOptimizer
 import org.apache.spark.sql.catalyst.parser.mbp.mbpCatalystSqlParser
+import org.apache.spark.sql.execution.mbp.mbpOptimizer
 //import org.apache.spark.sql.mbp.relation.B_RTreeRelationScanStrategy
 import org.apache.spark.storage.mbp.mbpBlockManager
 import org.apache.spark.launcher.SparkAppHandle

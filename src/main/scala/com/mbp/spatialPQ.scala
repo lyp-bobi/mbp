@@ -1,10 +1,9 @@
-package org.apache.spark.storage.memory.mbp
+package com.mbp
 
-
-import org.apache.spark.sql.mbp.udt.stRange
+import org.apache.spark.internal.Logging
+import org.apache.spark.sql.catalyst.expression.mbp.udt.stRange
 
 import scala.collection.mutable
-import org.apache.spark.internal.Logging
 
 
 

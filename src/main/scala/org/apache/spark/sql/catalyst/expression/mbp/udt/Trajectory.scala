@@ -1,4 +1,4 @@
-package org.apache.spark.sql.mbp.udt
+package org.apache.spark.sql.catalyst.expression.mbp.udt
 
 import scala.collection.mutable
 

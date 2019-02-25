@@ -1,4 +1,4 @@
-package org.apache.spark.sql.mbp.index
+package org.apache.spark.sql.execution.mbp
 
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
