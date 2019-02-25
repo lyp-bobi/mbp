@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package org.apache.spark.sql.catalyst.expression.mbp.udt
+package com.mbp.Feature
 
 class Point(coord: Array[Double]) extends Feature {
   override val dimensions: Int = coord.length

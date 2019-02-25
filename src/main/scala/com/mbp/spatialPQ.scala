@@ -1,7 +1,7 @@
 package com.mbp
 
+import com.mbp.Feature.stRange
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.catalyst.expression.mbp.udt.stRange
 
 import scala.collection.mutable
 

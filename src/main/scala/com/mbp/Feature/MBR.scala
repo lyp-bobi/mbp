@@ -15,7 +15,7 @@
  * limitations under the License.
  *
  */
-package org.apache.spark.sql.catalyst.expression.mbp.udt
+package com.mbp.Feature
 
 case class MBR(low: Point, high: Point)  {
   require(low.dimensions == high.dimensions)

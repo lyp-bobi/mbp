@@ -1,4 +1,4 @@
-package org.apache.spark.sql.catalyst.expression.mbp.udt
+package com.mbp.Feature
 
 class stRange(var xlow:Double,var xhigh:Double,var ylow:Double,var yhigh:Double,var tlow:Double,var thigh:Double)
   extends Feature{

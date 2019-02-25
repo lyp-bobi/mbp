@@ -14,19 +14,17 @@
  * limitations under the License.
  *
  */
-package org.apache.spark.sql.catalyst.expression.mbp.udt
+package org.apache.spark.sql.catalyst.expression.mbp
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 
 import com.esotericsoftware.kryo.Kryo
 import com.esotericsoftware.kryo.io.{Input, Output}
+import com.mbp.Feature.Feature
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow
 import org.apache.spark.sql.types._
 
-abstract class Feature extends Serializable  {
-  val dimensions: Int
-}
 
 class FeatureType extends UserDefinedType[Feature]{
   val kryo=new Kryo()
