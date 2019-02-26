@@ -2,13 +2,13 @@ package org.apache.spark.sql.mbp
 
 import org.apache.spark.sql.catalyst.expressions.Attribute
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
+import org.apache.spark.sql.catalyst.expressions.mbp.InRange
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.catalyst.plans.logical._
+import org.apache.spark.sql.execution.mbp.{LiteralUtil, QueryExecution}
 import org.apache.spark.sql.{Encoder, Row, SparkSession, Dataset => SQLDataset}
-import org.apache.spark.sql.mbp.execution.QueryExecution
-import org.apache.spark.sql.mbp.udt.{Point,Trajectory}
-import org.apache.spark.sql.mbp.expression._
-import org.apache.spark.sql.mbp.util.LiteralUtil
+import com.mbp.Feature.{Point, Trajectory}
+import org.apache.spark.sql.catalyst.expressions.mbp._
 
 private[mbp] object Dataset {
   def apply[T: Encoder](mbpSession: MBPSession, logicalPlan: LogicalPlan): Dataset[T] = {

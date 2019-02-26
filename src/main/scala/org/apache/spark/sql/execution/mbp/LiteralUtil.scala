@@ -15,20 +15,17 @@
  *
  */
 
-package org.apache.spark.sql.mbp.spatial
+package org.apache.spark.sql.execution.mbp
 
+import org.apache.spark.sql.catalyst.expressions.Literal
+import com.mbp.Feature.Feature
+import org.apache.spark.sql.catalyst.expressions.mbp.FeatureType
 /**
- * Created by dong on 1/15/16.
- * Distance Utilities
- */
-object Dist {
-  def furthest(a: Point, b: MBR) : Double = {
-    require(a.coord.length == b.low.coord.length)
-    var ans = 0.0
-    for (i <- a.coord.indices) {
-      ans += Math.max((a.coord(i) - b.low.coord(i)) * (a.coord(i) - b.low.coord(i)),
-        (a.coord(i) - b.high.coord(i)) * (a.coord(i) - b.high.coord(i)))
-    }
-    Math.sqrt(ans)
+  * Created by dongx on 11/14/2016.
+  */
+object LiteralUtil {
+  def apply(v: Any): Literal = v match {
+    case s: Feature => Literal.create(v, FeatureType)
+    case _ => Literal(v)
   }
 }

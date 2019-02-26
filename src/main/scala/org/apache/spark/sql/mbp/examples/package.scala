@@ -1,6 +1,7 @@
 package org.apache.spark.sql.mbp
 
 import org.apache.spark.SparkConf
+import org.apache.spark.mbp.{mbpContext=>MBPContext}
 
 package object examples {
   case class PointData(x: Double, y: Double, z: Double, other: String)

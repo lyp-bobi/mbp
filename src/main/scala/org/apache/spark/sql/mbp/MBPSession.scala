@@ -3,16 +3,17 @@ package org.apache.spark.sql.mbp
 import org.apache.spark.sql.catalyst.plans.logical
 import org.apache.spark.sql.{Encoder, SparkSession, Strategy, DataFrame => SQLDataFrame, Dataset => SQLDataset}
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
+import org.apache.spark.sql.execution.mbp.{FilterExec, QueryExecution}
 import org.apache.spark.sql.execution.{SparkPlan, SparkPlanner}
-import org.apache.spark.sql.mbp.execution.FilterExec
-import org.apache.spark.sql.mbp.execution.MBPFilter.planLater
+import org.apache.spark.sql.execution.mbp.MBPFilter.planLater
+import org.apache.spark.mbp.{mbpContext=>MBPContext}
 
 class MBPSession private[mbp](@transient val mbpContext: MBPContext)
   extends SparkSession(mbpContext){
   self=>
   protected[mbp] val indexManager: IndexManager = new IndexManager
 
-  def executePlan(plan: LogicalPlan)= new execution.QueryExecution(self, plan)
+  def executePlan(plan: LogicalPlan)= new QueryExecution(self, plan)
 
 
   /*def indexTable(tableName: String, indexType: IndexType,

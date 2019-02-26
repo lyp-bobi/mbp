@@ -15,7 +15,7 @@
  *
  */
 
-package org.apache.spark.sql.mbp.spatial
+package com.mbp.Feature
 
 //import com.vividsolutions.jts.geom.{Geometry, Polygon => JTSPolygon}
 

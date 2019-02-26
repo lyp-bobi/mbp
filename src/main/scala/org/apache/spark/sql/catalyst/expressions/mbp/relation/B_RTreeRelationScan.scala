@@ -15,7 +15,7 @@
  *
  */
 
-package org.apache.spark.sql.catalyst.expression.mbp.relation
+package org.apache.spark.sql.catalyst.expressions.mbp.relation
 
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.catalyst.InternalRow

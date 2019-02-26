@@ -1,10 +1,10 @@
-package org.apache.spark.sql.mbp.execution
+package org.apache.spark.sql.execution.mbp
 
-import org.apache.spark.sql.{ExperimentalMethods, SparkSession, Strategy}
 import org.apache.spark.sql.catalyst.plans.logical
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.execution.{SparkPlan, SparkPlanner, QueryExecution => SQLQueryExecution}
 import org.apache.spark.sql.mbp.MBPSession
+import org.apache.spark.sql.{ExperimentalMethods, Strategy}
 
 class QueryExecution (val mbpSession:MBPSession, override val logical:LogicalPlan)
   extends SQLQueryExecution(mbpSession,logical) {

@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package org.apache.spark.sql.catalyst.expression.mbp
+package org.apache.spark.sql.catalyst.expressions.mbp
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 

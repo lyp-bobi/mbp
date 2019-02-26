@@ -1,11 +1,11 @@
-package org.apache.spark.sql.mbp.expression
+package org.apache.spark.sql.catalyst.expressions.mbp
 
 import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.catalyst.expressions.{Expression, Literal}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.{Expression, Literal}
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.mbp.udt.{Point, Trajectory,MBR}
-import org.apache.spark.sql.mbp.udt.FeatureType
+import com.mbp.Feature._
+
 case class InRange(range_low:Expression, range_high:Expression)
   extends Expression with CodegenFallback {
   override def dataType: DataType = BooleanType

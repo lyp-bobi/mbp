@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-package org.apache.spark.sql.mbp.execution
+package org.apache.spark.sql.execution.mbp
 
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.catalyst.expressions.{Attribute, Expression, Literal, PredicateHelper, SortOrder, And => SQLAnd, Not => SQLNot, Or => SQLOr}
-import org.apache.spark.sql.catalyst.expressions.{SortOrder, And => SQLAnd, Not => SQLNot, Or => SQLOr}
+import org.apache.spark.sql.catalyst.expressions.{Attribute, Expression, PredicateHelper, SortOrder, And => SQLAnd, Not => SQLNot, Or => SQLOr}
 import org.apache.spark.sql.catalyst.plans.physical.Partitioning
 import org.apache.spark.sql.execution.SparkPlan
-import org.apache.spark.sql.mbp.udt.{Point,Trajectory,MBR}
 
 /**
   * Created by dongx on 11/13/2016.

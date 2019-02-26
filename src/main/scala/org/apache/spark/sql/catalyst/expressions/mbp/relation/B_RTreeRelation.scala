@@ -15,7 +15,7 @@
  *
  */
 
-package org.apache.spark.sql.catalyst.expression.mbp.relation
+package org.apache.spark.sql.catalyst.expressions.mbp.relation
 
 import org.apache.spark.sql.catalyst.analysis.MultiInstanceRelation
 import org.apache.spark.sql.catalyst.expressions.Attribute
