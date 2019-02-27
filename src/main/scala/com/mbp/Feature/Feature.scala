@@ -1,5 +1,7 @@
 package com.mbp.Feature
 
 abstract class Feature extends Serializable  {
-  val dimensions: Int
+  def minDist(other: Feature): Double
+
+  def intersects(other: Feature): Boolean
 }
