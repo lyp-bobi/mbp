@@ -1,6 +1,6 @@
 package com.mbp
 
-import com.mbp.Feature.MBB
+import com.mbp.Feature.MBR
 import org.apache.spark.internal.Logging
 
 import scala.collection.mutable
@@ -10,7 +10,7 @@ import scala.collection.mutable
 // visit of an element would prevent elements "near" enough from being evicted
 case class spatialPQ[A,B](spatial_thres:Double,temporal_thres:Double)
   extends mutable.LinkedHashMap[A,B] with Logging {
-  val locs= new mutable.HashMap[A,MBB]()
+  val locs= new mutable.HashMap[A,MBR]()
   val neighbours= new mutable.HashMap[A,mutable.MutableList[A]]()
   def moveToTail(key:A): Unit ={
     var last:Entry = lastEntry
@@ -52,11 +52,11 @@ case class spatialPQ[A,B](spatial_thres:Double,temporal_thres:Double)
     logInfo("Inserting a block without spatial infomation")
     super.put(key,value)
   }
-  def put(key:A,value:B,range:MBB):Option[B]={
+  def put(key:A,value:B,range:MBR):Option[B]={
     locs.put(key,range)
     val neighList = new mutable.MutableList[A]
     locs.foreach[Unit](x=>{
-      val (sdist,tdist) =range.distToVisit(x._2)
+      val (sdist,tdist) =range.stDist(x._2)
       if(sdist<spatial_thres&&tdist<temporal_thres){
         neighList+=x._1
         neighbours(x._1)+=key

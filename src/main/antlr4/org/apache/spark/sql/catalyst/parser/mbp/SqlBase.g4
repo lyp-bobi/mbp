@@ -565,7 +565,8 @@ predicate
 //===mbp===s
 
 INRANGE: 'INRANGE';
-INKNN: 'KNN';
+INKNN: 'INKNN';
+INDIST: 'INDIST';
 POINT: 'POINT';
 TRAJ: 'TRAJ';
 STINDEX: 'STINDEX';

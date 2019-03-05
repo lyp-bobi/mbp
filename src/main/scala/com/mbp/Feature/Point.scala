@@ -2,20 +2,23 @@
 package com.mbp.Feature
 
 class Point(var coord: xytList) extends Feature {
+  def this(x:Double,y:Double,t:Double){
+    this(new xytList(x,y,t))
+  }
   def this(array: Array[Double]){
     this(new xytList(array(0),array(1),array(2)))
   }
   override def intersects(other: Feature): Boolean = {
     other match {
       case p: Point => p == this
-      case mbb: MBB => mbb.contains(this)
+      case mbr: MBR => mbr.contains(this)
     }
   }
 
   override def minDist(other: Feature): Double = {
     other match {
       case p: Point => minDist(p)
-      case mbb: MBB => mbb.minDist(this)
+      case mbr: MBR => mbr.minDist(this)
     }
   }
 
