@@ -4,9 +4,9 @@ import scala.collection.mutable
 
 class Trajectory(dim:Int) extends Feature {
   // TODO: implement these methods
-  override def intersects(other: Feature): Boolean = false
+  override def intersects3(other: Feature): Boolean = false
 
-  override def minDist(other: Feature): Double = 0
+  override def minDist3(other: Feature): Double = 0
   var segmented= false
   val points = new mutable.MutableList[Point]
   val segments = new mutable.MutableList[Segment]
@@ -22,7 +22,7 @@ class Trajectory(dim:Int) extends Feature {
 class Segment extends Feature {
   val points = new mutable.MutableList[Point]
 
-  override def intersects(other: Feature): Boolean = false
+  override def intersects3(other: Feature): Boolean = false
 
-  override def minDist(other: Feature): Double = 0
+  override def minDist3(other: Feature): Double = 0
 }

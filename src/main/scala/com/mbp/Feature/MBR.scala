@@ -12,26 +12,26 @@ case class MBR(var low: Point, high: Point) extends Feature {
       }
     true
   }
-  override def intersects(other: Feature): Boolean = {
+  override def intersects3(other: Feature): Boolean = {
     other match {
       case p: Point => contains(p)
-      case mbr: MBR => intersects(mbr)
+      case mbr: MBR => intersects3(mbr)
     }
   }
-  def intersects(other: MBR): Boolean = {
+  def intersects3(other: MBR): Boolean = {
     for (i <- 1 to 3)
       if (low.coord(i) > other.high.coord(i) || high.coord(i) < other.low.coord(i)) {
         return false
       }
     true
   }
-  override def minDist(other: Feature): Double = {
+  override def minDist3(other: Feature): Double = {
     other match {
-      case p: Point => minDist(p)
-      case mbr: MBR => minDist(mbr)
+      case p: Point => minDist3(p)
+      case mbr: MBR => minDist3(mbr)
     }
   }
-  def minDist(p: Point): Double = {
+  def minDist3(p: Point): Double = {
     var ans = 0.0
     for (i <- 1 to 3) {
       if (p.coord(i) < low.coord(i)) {
@@ -42,7 +42,7 @@ case class MBR(var low: Point, high: Point) extends Feature {
     }
     Math.sqrt(ans)
   }
-  def minDist(other: MBR): Double = {
+  def minDist3(other: MBR): Double = {
     var ans = 0.0
     for (i <- 1 to 3) {
       var x = 0.0

@@ -119,7 +119,7 @@ case class TrajectoryCircleRangeExpression(traj: Expression, center: Point, radi
   override def nullSafeEval(input: Any): Any = {
     val trajectory = TrajectorySimilarityExpression.getTrajectory(
       input.asInstanceOf[UnsafeArrayData])
-    trajectory.points.forall(p => p.minDist(center) <= radius)
+    trajectory.points.forall(p => p.minDist3(center) <= radius)
   }
 }
 */

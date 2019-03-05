@@ -20,7 +20,7 @@ case class InRange(range_low:Expression, range_high:Expression)
     val eval_high = range_high.asInstanceOf[Literal].value.asInstanceOf[Point]
     //require(eval_shape.dimensions == eval_low.dimensions && eval_shape.dimensions == eval_high.dimensions)
     val mbr = MBR(eval_low, eval_high)
-    mbr.intersects(eval_shape)
+    mbr.intersects3(eval_shape)
   }
 
 }

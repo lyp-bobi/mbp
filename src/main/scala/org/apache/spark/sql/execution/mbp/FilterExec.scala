@@ -32,8 +32,8 @@ case class FilterExec(condition: Expression, child: SparkPlan) extends SparkPlan
     override def compare(x: InternalRow, y: InternalRow): Int = {
       val shape_x = ShapeUtils.getShape(point, child.output, x)
       val shape_y = ShapeUtils.getShape(point, child.output, y)
-      val dis_x = target.minDist(shape_x)
-      val dis_y = target.minDist(shape_y)
+      val dis_x = target.minDist3(shape_x)
+      val dis_y = target.minDist3(shape_y)
       dis_x.compare(dis_y)
     }
   }

@@ -7,19 +7,19 @@ import scala.util.control.Breaks
 
 
 abstract class RTreeEntry {
-  def minDist(x: Feature): Double
+  def minDist3(x: Feature): Double
 
-  def intersects(x: Feature): Boolean
+  def intersects3(x: Feature): Boolean
 }
 
 case class RTreeLeafEntry(feature: Feature, m_data: Int, size: Int) extends RTreeEntry {
-  override def minDist(x: Feature): Double = feature.minDist(x)
-  override def intersects(x: Feature): Boolean = x.intersects(feature)
+  override def minDist3(x: Feature): Double = feature.minDist3(x)
+  override def intersects3(x: Feature): Boolean = x.intersects3(feature)
 }
 
 case class RTreeInternalEntry(mbr: MBR, node: RTreeNode) extends RTreeEntry {
-  override def minDist(x: Feature): Double = mbr.minDist(x)
-  override def intersects(x: Feature): Boolean = x.intersects(mbr)
+  override def minDist3(x: Feature): Double = mbr.minDist3(x)
+  override def intersects3(x: Feature): Boolean = x.intersects3(mbr)
 }
 
 case class RTreeNode(m_mbr: MBR, m_child: Array[RTreeEntry], isLeaf: Boolean) {
@@ -27,7 +27,7 @@ case class RTreeNode(m_mbr: MBR, m_child: Array[RTreeEntry], isLeaf: Boolean) {
     this(m_mbr, children.map(x => RTreeInternalEntry(x._1, x._2)), false)
   }
 
-  // XX Interesting Trick! Overriding same function
+
   def this(m_mbr: MBR, children: => Array[(Point, Int)]) = {
     this(m_mbr, children.map(x => RTreeLeafEntry(x._1, x._2, 1)), true)
   }
@@ -50,18 +50,18 @@ case class RTree(root: RTreeNode) extends Index with Serializable {
   def range(query: MBR): Array[(Feature, Int)] = {
     val ans = mutable.ArrayBuffer[(Feature, Int)]()
     val st = new mutable.Stack[RTreeNode]()
-    if (root.m_mbr.intersects(query) && root.m_child.nonEmpty) st.push(root)
+    if (root.m_mbr.intersects3(query) && root.m_child.nonEmpty) st.push(root)
     while (st.nonEmpty) {
       val now = st.pop()
       if (!now.isLeaf) {
         now.m_child.foreach {
           case RTreeInternalEntry(mbr, node) =>
-            if (query.intersects(mbr)) st.push(node)
+            if (query.intersects3(mbr)) st.push(node)
         }
       } else {
         now.m_child.foreach {
           case RTreeLeafEntry(feature, m_data, _) =>
-            if (query.intersects(feature)) ans += ((feature, m_data))
+            if (query.intersects3(feature)) ans += ((feature, m_data))
         }
       }
     }
@@ -71,7 +71,7 @@ case class RTree(root: RTreeNode) extends Index with Serializable {
   def range(query: MBR, level_limit: Int, s_threshold: Double): Option[Array[(Feature, Int)]] = {
     val ans = mutable.ArrayBuffer[(Feature, Int)]()
     val q = new mutable.Queue[(RTreeNode, Int)]()
-    if (root.m_mbr.intersects(query) && root.m_child.nonEmpty) q.enqueue((root, 1))
+    if (root.m_mbr.intersects3(query) && root.m_child.nonEmpty) q.enqueue((root, 1))
     var estimate: Double = 0
     val loop = new Breaks
     import loop.{break, breakable}
@@ -83,18 +83,18 @@ case class RTree(root: RTreeNode) extends Index with Serializable {
         if (cur_node.isLeaf) {
           cur_node.m_child.foreach {
             case RTreeLeafEntry(feature, m_data, _) =>
-              if (query.intersects(feature)) ans += ((feature, m_data))
+              if (query.intersects3(feature)) ans += ((feature, m_data))
           }
         } else if (cur_level < level_limit) {
           cur_node.m_child.foreach {
             case RTreeInternalEntry(mbr, node) =>
-              if (query.intersects(mbr)) q.enqueue((node, cur_level + 1))
+              if (query.intersects3(mbr)) q.enqueue((node, cur_level + 1))
           }
         } else if (cur_level == level_limit) {
           estimate += cur_node.m_mbr.calcRatio(query) * cur_node.size
           cur_node.m_child.foreach {
             case RTreeInternalEntry(mbr, node) =>
-              if (query.intersects(mbr)) q.enqueue((node, cur_level + 1))
+              if (query.intersects3(mbr)) q.enqueue((node, cur_level + 1))
           }
         } else break
       }
@@ -108,12 +108,12 @@ case class RTree(root: RTreeNode) extends Index with Serializable {
       if (cur_node.isLeaf) {
         cur_node.m_child.foreach {
           case RTreeLeafEntry(feature, m_data, _) =>
-            if (query.intersects(feature)) ans += ((feature, m_data))
+            if (query.intersects3(feature)) ans += ((feature, m_data))
         }
       } else {
         cur_node.m_child.foreach {
           case RTreeInternalEntry(mbr, node) =>
-            if (query.intersects(mbr)) q.enqueue((node, cur_level + 1))
+            if (query.intersects3(mbr)) q.enqueue((node, cur_level + 1))
         }
       }
     }
@@ -123,18 +123,18 @@ case class RTree(root: RTreeNode) extends Index with Serializable {
   def circleRange(origin: Feature, r: Double): Array[(Feature, Int)] = {
     val ans = mutable.ArrayBuffer[(Feature, Int)]()
     val st = new mutable.Stack[RTreeNode]()
-    if (root.m_mbr.minDist(origin) <= r && root.m_child.nonEmpty) st.push(root)
+    if (root.m_mbr.minDist3(origin) <= r && root.m_child.nonEmpty) st.push(root)
     while (st.nonEmpty) {
       val now = st.pop()
       if (!now.isLeaf) {
         now.m_child.foreach{
           case RTreeInternalEntry(mbr, node) =>
-            if (origin.minDist(mbr) <= r) st.push(node)
+            if (origin.minDist3(mbr) <= r) st.push(node)
         }
       } else {
         now.m_child.foreach {
           case RTreeLeafEntry(feature, m_data, _) =>
-            if (origin.minDist(feature) <= r) ans += ((feature, m_data))
+            if (origin.minDist3(feature) <= r) ans += ((feature, m_data))
         }
       }
     }
@@ -144,18 +144,18 @@ case class RTree(root: RTreeNode) extends Index with Serializable {
   def circleRangeCnt(origin: Feature, r: Double): Array[(Feature, Int, Int)] = {
     val ans = mutable.ArrayBuffer[(Feature, Int, Int)]()
     val st = new mutable.Stack[RTreeNode]()
-    if (root.m_mbr.minDist(origin) <= r && root.m_child.nonEmpty) st.push(root)
+    if (root.m_mbr.minDist3(origin) <= r && root.m_child.nonEmpty) st.push(root)
     while (st.nonEmpty) {
       val now = st.pop()
       if (!now.isLeaf) {
         now.m_child.foreach{
           case RTreeInternalEntry(mbr, node) =>
-            if (origin.minDist(mbr) <= r) st.push(node)
+            if (origin.minDist3(mbr) <= r) st.push(node)
         }
       } else {
         now.m_child.foreach {
           case RTreeLeafEntry(feature, m_data, size) =>
-            if (origin.minDist(feature) <= r) ans += ((feature, m_data, size))
+            if (origin.minDist3(feature) <= r) ans += ((feature, m_data, size))
         }
       }
     }
@@ -168,7 +168,7 @@ case class RTree(root: RTreeNode) extends Index with Serializable {
 
     def check(now: Feature) : Boolean = {
       for (i <- queries.indices)
-        if (now.minDist(queries(i)._1) > queries(i)._2) return false
+        if (now.minDist3(queries(i)._1) > queries(i)._2) return false
       true
     }
 
@@ -205,8 +205,8 @@ case class RTree(root: RTreeNode) extends Index with Serializable {
         now._1 match {
           case RTreeNode(_, m_child, isLeaf) =>
             m_child.foreach(entry =>
-              if (isLeaf) pq.enqueue((entry, entry.minDist(query)))
-              else pq.enqueue((entry.asInstanceOf[RTreeInternalEntry].node, entry.minDist(query)))
+              if (isLeaf) pq.enqueue((entry, entry.minDist3(query)))
+              else pq.enqueue((entry.asInstanceOf[RTreeInternalEntry].node, entry.minDist3(query)))
             )
           case RTreeLeafEntry(p, m_data, size) =>
             cnt += size
@@ -291,7 +291,7 @@ case class RTree(root: RTreeNode) extends Index with Serializable {
 
 object RTree {
   def apply(entries: Array[(Point, Int)], max_entries_per_node: Int): RTree = {
-    val dimension = 3
+    val dimension = 2
     val entries_len = entries.length.toDouble
     val dim = new Array[Int](dimension)
     var remaining = entries_len / max_entries_per_node
@@ -393,7 +393,7 @@ object RTree {
 
 
   def apply(entries: Array[(MBR, Int, Int)], max_entries_per_node: Int): RTree = {
-    val dimension = 3
+    val dimension = 2
     val entries_len = entries.length.toDouble
     val dim = new Array[Int](dimension)
     var remaining = entries_len / max_entries_per_node
