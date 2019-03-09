@@ -6,8 +6,9 @@ class Point(var coord: xytList) extends Feature {
     this(new xytList(x,y,t))
   }
   def this(array: Array[Double]){
-    this(new xytList(array(0),array(1),array(2)))
+    this(new xytList(array(0),array(1),(if(array.length>2) array(2) else 0)))
   }
+
   override def intersects3(other: Feature): Boolean = {
     other match {
       case p: Point => p == this
@@ -35,11 +36,11 @@ class xytList(var x:Double,var y:Double,var t:Double){
     this(array(0),array(1),array(2))
   }
   def apply(n:Int):Double={
-    if(n==1){
+    if(n==0){
       return x
-    } else if (n==2){
+    } else if (n==1){
       return y
-    } else if(n==3){
+    } else if(n==2){
       return t
     } else{
       throw new IllegalArgumentException

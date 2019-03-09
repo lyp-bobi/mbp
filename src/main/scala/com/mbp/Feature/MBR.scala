@@ -1,6 +1,6 @@
 
 package com.mbp.Feature
-case class MBR(var low: Point, high: Point) extends Feature {
+case class MBR(var low: Point,var high: Point) extends Feature {
   //TODO: Use squared distance
   def this(xrange:Tuple2[Double,Double],yrange:Tuple2[Double,Double],trange:Tuple2[Double,Double]){
     this(new Point(xrange._1,yrange._1,trange._1),new Point(xrange._2,yrange._2,trange._2))
@@ -82,5 +82,9 @@ case class MBR(var low: Point, high: Point) extends Feature {
       anst = Math.abs(other.low.coord(3) - high.coord(3))
     }
     (Math.sqrt(ans),anst)
+  }
+
+  override def toString: String = {
+    low.coord.x.toString()+","+high.coord.x.toString()+","+low.coord.y.toString()+","+high.coord.y.toString()
   }
 }

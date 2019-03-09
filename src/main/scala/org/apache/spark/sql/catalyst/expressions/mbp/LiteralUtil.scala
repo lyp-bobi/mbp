@@ -15,11 +15,10 @@
  *
  */
 
-package org.apache.spark.sql.execution.mbp
+package org.apache.spark.sql.catalyst.expressions.mbp
 
-import org.apache.spark.sql.catalyst.expressions.Literal
 import com.mbp.Feature.Feature
-import org.apache.spark.sql.catalyst.expressions.mbp.FeatureType
+import org.apache.spark.sql.catalyst.expressions.Literal
 /**
   * Created by dongx on 11/14/2016.
   */

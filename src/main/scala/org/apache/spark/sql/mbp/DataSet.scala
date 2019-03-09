@@ -5,7 +5,7 @@ import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.catalyst.expressions.mbp.InRange
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.catalyst.plans.logical._
-import org.apache.spark.sql.execution.mbp.{LiteralUtil, QueryExecution}
+import org.apache.spark.sql.execution.mbp.QueryExecution
 import org.apache.spark.sql.{Encoder, Row, SparkSession, Dataset => SQLDataset}
 import com.mbp.Feature.{Point, Trajectory}
 import org.apache.spark.sql.catalyst.expressions.mbp._
