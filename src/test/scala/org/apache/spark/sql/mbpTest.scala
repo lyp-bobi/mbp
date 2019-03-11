@@ -31,7 +31,7 @@ class mbpTest extends FunSuite with BeforeAndAfter{
     ss= SessionProvider.getOrCreateSession(conf)
   }
   // TODO: Test the Session Provider
-  test("BoomBoomPow"){
+  test("read and store data"){
     val df=ss.read.csv("/home/chuang/43676060.csv")
     df.persist(StorageLevel.DISK_ONLY)
     df.count()

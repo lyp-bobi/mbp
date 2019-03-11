@@ -10,7 +10,7 @@ import java.io.{File,PrintWriter}
 
 
 class outsideTest extends FunSuite with BeforeAndAfter{
-  test("POMPOMPOW"){
+  test("group points to mbrs"){
     val file=Source.fromFile("D://AIS_2017_01_Zone03.csv")
     val lines = file.getLines().drop(1).toArray
     val points = new ArrayBuffer[Point]
@@ -22,7 +22,7 @@ class outsideTest extends FunSuite with BeforeAndAfter{
     }
     val writer = new PrintWriter(new File("./mbrs.txt"))
     writer.flush()
-    val mbrs=RTree.groupPointToMBR(points.zipWithIndex.toArray,50)
+    val mbrs=RTree.groupPointToMBR(points.zipWithIndex.toArray,3)
     var lowx= 180.0
     var highx= -180.0
     var lowy= 90.0
