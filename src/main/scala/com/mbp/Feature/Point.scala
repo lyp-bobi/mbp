@@ -2,11 +2,12 @@
 package com.mbp.Feature
 
 class Point(var coord: xytList) extends Feature {
-  def this(x:Double,y:Double,t:Double){
+  override def toString: String = "("+coord.x.toString+","+coord.y.toString+","+coord.t.toString+")"
+  def this(x:Double,y:Double,t:Long){
     this(new xytList(x,y,t))
   }
   def this(array: Array[Double]){
-    this(new xytList(array(0),array(1),(if(array.length>2) array(2) else 0)))
+    this(new xytList(array(0),array(1),(if(array.length>2) array(2).toLong else 0)))
   }
 
   override def intersects3(other: Feature): Boolean = {
@@ -29,11 +30,17 @@ class Point(var coord: xytList) extends Feature {
       ans += (coord(i) - other.coord(i)) * (coord(i) - other.coord(i))
     Math.sqrt(ans)
   }
+  def gethigh(other:Point):Point={
+    new Point(math.max(coord.x,other.coord.x),math.max(coord.y,other.coord.y),math.max(coord.t,other.coord.t).toLong)
+  }
+  def getlow(other:Point):Point={
+    new Point(math.min(coord.x,other.coord.x),math.min(coord.y,other.coord.y),math.min(coord.t,other.coord.t).toLong)
+  }
 }
 
-class xytList(var x:Double,var y:Double,var t:Double){
+class xytList(var x:Double,var y:Double,var t:Long){
   def this(array: Array[Double]){
-    this(array(0),array(1),array(2))
+    this(array(0),array(1),array(2).toLong)
   }
   def apply(n:Int):Double={
     if(n==0){
@@ -49,5 +56,4 @@ class xytList(var x:Double,var y:Double,var t:Double){
   def toArray:Array[Double]={
     Array(x,y,t)
   }
-
 }

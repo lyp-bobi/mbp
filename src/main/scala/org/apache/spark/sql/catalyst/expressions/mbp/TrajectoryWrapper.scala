@@ -16,7 +16,7 @@ case class TrajectoryWrapper(exps: Seq[Expression])
 
     override def eval(input: InternalRow): Any = {
       val coord = exps.map(_.eval(input).asInstanceOf[Point]).toArray
-      val traj=new Trajectory(2)
+      val traj=new Trajectory()
       traj
 
     }

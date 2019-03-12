@@ -2,7 +2,7 @@
 package com.mbp.Feature
 case class MBR(var low: Point,var high: Point) extends Feature {
   //TODO: Use squared distance
-  def this(xrange:Tuple2[Double,Double],yrange:Tuple2[Double,Double],trange:Tuple2[Double,Double]){
+  def this(xrange:Tuple2[Double,Double],yrange:Tuple2[Double,Double],trange:Tuple2[Long,Long]){
     this(new Point(xrange._1,yrange._1,trange._1),new Point(xrange._2,yrange._2,trange._2))
   }
   def contains(p: Point): Boolean = {

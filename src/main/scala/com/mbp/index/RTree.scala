@@ -368,7 +368,7 @@ object RTree {
     tmp_nodes.toArray
   }
 
-  def apply(entries: Array[(Point, Int)], max_entries_per_node: Int): RTree = {
+  def apply(entries: Array[(Point, Int)], max_entries_per_node: Int): RTree = { // Int stand for Id(by zip)
     val dimension = 2
     val entries_len = entries.length.toDouble
     val dim = new Array[Int](dimension)
@@ -470,7 +470,7 @@ object RTree {
 
 
 
-  def apply(entries: Array[(MBR, Int, Int)], max_entries_per_node: Int): RTree = {
+  def apply(entries: Array[(MBR, Int, Int)], max_entries_per_node: Int): RTree = { //Int,Int for Id and size
     val dimension = 2
     val entries_len = entries.length.toDouble
     val dim = new Array[Int](dimension)
