@@ -6,7 +6,7 @@ case class MBR(var low: Point,var high: Point) extends Feature {
     this(new Point(xrange._1,yrange._1,trange._1),new Point(xrange._2,yrange._2,trange._2))
   }
   def contains(p: Point): Boolean = {
-    for (i <- 1 to 3)
+    for (i <- 0 to 2)
       if (low.coord(i) > p.coord(i) || high.coord(i) < p.coord(i)) {
         return false
       }
@@ -18,8 +18,21 @@ case class MBR(var low: Point,var high: Point) extends Feature {
       case mbr: MBR => intersects3(mbr)
     }
   }
+  override def intersects2(other: Feature): Boolean = {
+    other match {
+      case p: Point => contains(p)
+      case mbr: MBR => intersects2(mbr)
+    }
+  }
+  def intersects2(other: MBR): Boolean = {
+    for (i <- 0 to 1)
+      if (low.coord(i) > other.high.coord(i) || high.coord(i) < other.low.coord(i)) {
+        return false
+      }
+    true
+  }
   def intersects3(other: MBR): Boolean = {
-    for (i <- 1 to 3)
+    for (i <- 0 to 2)
       if (low.coord(i) > other.high.coord(i) || high.coord(i) < other.low.coord(i)) {
         return false
       }
@@ -33,7 +46,7 @@ case class MBR(var low: Point,var high: Point) extends Feature {
   }
   def minDist3(p: Point): Double = {
     var ans = 0.0
-    for (i <- 1 to 3) {
+    for (i <- 0 to 2) {
       if (p.coord(i) < low.coord(i)) {
         ans += (low.coord(i) - p.coord(i)) * (low.coord(i) - p.coord(i))
       } else if (p.coord(i) > high.coord(i)) {
@@ -44,7 +57,7 @@ case class MBR(var low: Point,var high: Point) extends Feature {
   }
   def minDist3(other: MBR): Double = {
     var ans = 0.0
-    for (i <- 1 to 3) {
+    for (i <- 0 to 2) {
       var x = 0.0
       if (other.high.coord(i) < low.coord(i)) {
         x = Math.abs(other.high.coord(i) - low.coord(i))
@@ -85,6 +98,6 @@ case class MBR(var low: Point,var high: Point) extends Feature {
   }
 
   override def toString: String = {
-    low.coord.x.toString()+","+high.coord.x.toString()+","+low.coord.y.toString()+","+high.coord.y.toString()
+    low.coord.x.toString()+","+high.coord.x.toString()+","+low.coord.y.toString()+","+high.coord.y.toString()+","+low.coord.t.toString()+","+high.coord.t.toString()
   }
 }

@@ -9,17 +9,17 @@ import scala.util.control.Breaks
 abstract class RTreeEntry {
   def minDist3(x: Feature): Double
 
-  def intersects3(x: Feature): Boolean
+  def intersects2(x: Feature): Boolean
 }
 
 case class RTreeLeafEntry(feature: Feature, m_data: Int, size: Int) extends RTreeEntry {
   override def minDist3(x: Feature): Double = feature.minDist3(x)
-  override def intersects3(x: Feature): Boolean = x.intersects3(feature)
+  override def intersects2(x: Feature): Boolean = x.intersects2(feature)
 }
 
 case class RTreeInternalEntry(mbr: MBR, node: RTreeNode) extends RTreeEntry {
   override def minDist3(x: Feature): Double = mbr.minDist3(x)
-  override def intersects3(x: Feature): Boolean = x.intersects3(mbr)
+  override def intersects2(x: Feature): Boolean = x.intersects2(mbr)
 }
 
 case class RTreeNode(m_mbr: MBR, m_child: Array[RTreeEntry], isLeaf: Boolean) {
@@ -50,18 +50,20 @@ case class RTree(root: RTreeNode) extends Index with Serializable {
   def range(query: MBR): Array[(Feature, Int)] = {
     val ans = mutable.ArrayBuffer[(Feature, Int)]()
     val st = new mutable.Stack[RTreeNode]()
-    if (root.m_mbr.intersects3(query) && root.m_child.nonEmpty) st.push(root)
+    if (root.m_mbr.intersects2(query) && root.m_child.nonEmpty) st.push(root)
     while (st.nonEmpty) {
       val now = st.pop()
       if (!now.isLeaf) {
         now.m_child.foreach {
           case RTreeInternalEntry(mbr, node) =>
-            if (query.intersects3(mbr)) st.push(node)
+            if (query.intersects2(mbr)) {
+              st.push(node)
+            }
         }
       } else {
         now.m_child.foreach {
           case RTreeLeafEntry(feature, m_data, _) =>
-            if (query.intersects3(feature)) ans += ((feature, m_data))
+            if (query.intersects2(feature)) ans += ((feature, m_data))
         }
       }
     }
@@ -71,7 +73,7 @@ case class RTree(root: RTreeNode) extends Index with Serializable {
   def range(query: MBR, level_limit: Int, s_threshold: Double): Option[Array[(Feature, Int)]] = {
     val ans = mutable.ArrayBuffer[(Feature, Int)]()
     val q = new mutable.Queue[(RTreeNode, Int)]()
-    if (root.m_mbr.intersects3(query) && root.m_child.nonEmpty) q.enqueue((root, 1))
+    if (root.m_mbr.intersects2(query) && root.m_child.nonEmpty) q.enqueue((root, 1))
     var estimate: Double = 0
     val loop = new Breaks
     import loop.{break, breakable}
@@ -83,18 +85,18 @@ case class RTree(root: RTreeNode) extends Index with Serializable {
         if (cur_node.isLeaf) {
           cur_node.m_child.foreach {
             case RTreeLeafEntry(feature, m_data, _) =>
-              if (query.intersects3(feature)) ans += ((feature, m_data))
+              if (query.intersects2(feature)) ans += ((feature, m_data))
           }
         } else if (cur_level < level_limit) {
           cur_node.m_child.foreach {
             case RTreeInternalEntry(mbr, node) =>
-              if (query.intersects3(mbr)) q.enqueue((node, cur_level + 1))
+              if (query.intersects2(mbr)) q.enqueue((node, cur_level + 1))
           }
         } else if (cur_level == level_limit) {
           estimate += cur_node.m_mbr.calcRatio(query) * cur_node.size
           cur_node.m_child.foreach {
             case RTreeInternalEntry(mbr, node) =>
-              if (query.intersects3(mbr)) q.enqueue((node, cur_level + 1))
+              if (query.intersects2(mbr)) q.enqueue((node, cur_level + 1))
           }
         } else break
       }
@@ -108,12 +110,12 @@ case class RTree(root: RTreeNode) extends Index with Serializable {
       if (cur_node.isLeaf) {
         cur_node.m_child.foreach {
           case RTreeLeafEntry(feature, m_data, _) =>
-            if (query.intersects3(feature)) ans += ((feature, m_data))
+            if (query.intersects2(feature)) ans += ((feature, m_data))
         }
       } else {
         cur_node.m_child.foreach {
           case RTreeInternalEntry(mbr, node) =>
-            if (query.intersects3(mbr)) q.enqueue((node, cur_level + 1))
+            if (query.intersects2(mbr)) q.enqueue((node, cur_level + 1))
         }
       }
     }

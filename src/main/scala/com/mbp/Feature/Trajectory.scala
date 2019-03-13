@@ -2,8 +2,9 @@ package com.mbp.Feature
 
 import scala.collection.mutable
 
-class Trajectory(var points:mutable.ArrayBuffer[Point] = new mutable.ArrayBuffer[Point]) extends Feature {
+class Trajectory(var points:mutable.ArrayBuffer[Point] = new mutable.ArrayBuffer[Point],var id:Long=0) extends Feature {
   // TODO: implement these methods
+  override def intersects2(other: Feature): Boolean = false
   override def intersects3(other: Feature): Boolean = false
 
   override def minDist3(other: Feature): Double = 0
@@ -12,9 +13,9 @@ class Trajectory(var points:mutable.ArrayBuffer[Point] = new mutable.ArrayBuffer
   def segmentate(td:timeDivision): Unit ={
     if(!segmented&& points.nonEmpty &&segments.isEmpty){
       // TODO: cut Trajectory into segments
-      val segp=points.groupBy(p=>math.floor((p.coord.t-td.startTime)/td.timedivision).toInt)
+      val segp=points.groupBy(p=>td.getPeriod(p.coord.t))
       for((period,ps)<-segp){
-        val seg = new Segment((td.startTime+period*td.timedivision,td.startTime+(period+1)*td.timedivision),ps)
+        val seg = new Segment(period,ps)
         segments.append(seg)
       }
       segmented=true
@@ -49,6 +50,7 @@ class Trajectory(var points:mutable.ArrayBuffer[Point] = new mutable.ArrayBuffer
 class Segment(var time:Tuple2[Long,Long]=(0,0),
               var points:mutable.ArrayBuffer[Point] = new mutable.ArrayBuffer[Point])
   extends Feature {
+  override def intersects2(other: Feature): Boolean = false
   override def intersects3(other: Feature): Boolean = false
   override def minDist3(other: Feature): Double = 0
 

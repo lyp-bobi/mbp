@@ -9,7 +9,12 @@ class Point(var coord: xytList) extends Feature {
   def this(array: Array[Double]){
     this(new xytList(array(0),array(1),(if(array.length>2) array(2).toLong else 0)))
   }
-
+  override def intersects2(other: Feature): Boolean = {
+    other match {
+      case p: Point => p == this
+      case mbr: MBR => mbr.contains(this)
+    }
+  }
   override def intersects3(other: Feature): Boolean = {
     other match {
       case p: Point => p == this
@@ -26,7 +31,7 @@ class Point(var coord: xytList) extends Feature {
 
   def minDist3(other: Point): Double = {
     var ans = 0.0
-    for (i <- 1 to 3)
+    for (i <- 0 to 2)
       ans += (coord(i) - other.coord(i)) * (coord(i) - other.coord(i))
     Math.sqrt(ans)
   }
