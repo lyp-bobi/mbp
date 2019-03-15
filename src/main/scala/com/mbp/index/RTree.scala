@@ -59,13 +59,16 @@ case class RTree(root: RTreeNode) extends Index with Serializable {
           case RTreeInternalEntry(mbr, node) =>
             if (query.intersects2(mbr)) {
               st.push(node)
+              println(node.m_mbr)
             }
         }
       } else {
         now.m_child.foreach {
           case RTreeLeafEntry(feature, m_data, _) =>
-            if (query.intersects2(feature)) ans += ((feature, m_data))
-            visit+=1
+            if (query.intersects2(feature)) {
+              ans += ((feature, m_data))
+              visit+=1
+            }
         }
       }
     }

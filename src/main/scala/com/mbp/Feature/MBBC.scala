@@ -53,6 +53,6 @@ case class MBBC(var start:MBR,var end:MBR,var maxspeed:Double,var mbr:MBR) exten
     start.expand(point).intersection2(end.expand(point)).get
   }
   override def toString: String = {
-    start.toString+","+end.toString
+    start.toString+","+end.toString+","+maxspeed+","+mbr.toString
   }
 }

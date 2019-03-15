@@ -55,13 +55,16 @@ case class R2Tree(root: R2TreeNode) extends Index with Serializable {
           case R2TreeInternalEntry(mbbc, node) =>
             if (query.intersects2(mbbc)) {
               st.push(node)
+              println(node.m_mbbc)
             }
         }
       } else {
         now.m_child.foreach {
           case R2TreeLeafEntry(feature, m_data, _) =>
-            if (query.intersects2(feature)) ans += ((feature, m_data))
-            visit+=1
+            if (query.intersects2(feature)) {
+              ans += ((feature, m_data))
+              visit+=1
+            }
         }
       }
     }
