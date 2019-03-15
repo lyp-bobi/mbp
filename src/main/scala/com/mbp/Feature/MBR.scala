@@ -1,10 +1,12 @@
 
 package com.mbp.Feature
+
 case class MBR(var low: Point,var high: Point) extends Feature {
   //TODO: Use squared distance
   def this(xrange:Tuple2[Double,Double],yrange:Tuple2[Double,Double],trange:Tuple2[Long,Long]){
     this(new Point(xrange._1,yrange._1,trange._1),new Point(xrange._2,yrange._2,trange._2))
   }
+
   def contains(p: Point): Boolean = {
     for (i <- 0 to 2)
       if (low.coord(i) > p.coord(i) || high.coord(i) < p.coord(i)) {
@@ -16,12 +18,14 @@ case class MBR(var low: Point,var high: Point) extends Feature {
     other match {
       case p: Point => contains(p)
       case mbr: MBR => intersects3(mbr)
+      case mbbc:MBBC => mbbc.intersects3(this)
     }
   }
   override def intersects2(other: Feature): Boolean = {
     other match {
       case p: Point => contains(p)
       case mbr: MBR => intersects2(mbr)
+      case mbbc:MBBC => mbbc.intersects2(this)
     }
   }
   def intersects2(other: MBR): Boolean = {
@@ -96,8 +100,25 @@ case class MBR(var low: Point,var high: Point) extends Feature {
     }
     (Math.sqrt(ans),anst)
   }
-
+  def expand(d:Double): MBR ={
+    if(low.coord.t!=high.coord.t) println("warn:the time of the MBR is not an instant, using only the smaller time bound")
+    new MBR((low.coord.x-d,high.coord.x+d),(low.coord.y-d,high.coord.y+d),(low.coord.t,low.coord.t))
+  }
+  def expand(p:Point): MBR ={
+    expand(math.abs(low.coord.t-p.coord.t))
+  }
+  def intersection2(other:MBR):Option[MBR]={
+    if(!intersects2(other)) {
+      println(toString)
+      println(other.toString)
+      return None
+    }
+    else{
+      return Some(MBR(low.gethigh(other.low),high.getlow(other.high)))
+    }
+  }
   override def toString: String = {
-    low.coord.x.toString()+","+high.coord.x.toString()+","+low.coord.y.toString()+","+high.coord.y.toString()+","+low.coord.t.toString()+","+high.coord.t.toString()
+    "x:["+low.coord.x.toString()+","+high.coord.x.toString()+"], y:["+low.coord.y.toString()+
+      ","+high.coord.y.toString()+"], z:["+low.coord.t.toString()+","+high.coord.t.toString()+"]"
   }
 }

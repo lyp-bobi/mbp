@@ -15,7 +15,7 @@ class Trajectory(var points:mutable.ArrayBuffer[Point] = new mutable.ArrayBuffer
       // TODO: cut Trajectory into segments
       val segp=points.groupBy(p=>td.getPeriod(p.coord.t))
       for((period,ps)<-segp){
-        val seg = new Segment(period,ps)
+        val seg = new Segment(period,ps.sortBy(x=>x.coord.t))
         segments.append(seg)
       }
       segmented=true
@@ -23,6 +23,9 @@ class Trajectory(var points:mutable.ArrayBuffer[Point] = new mutable.ArrayBuffer
   }
   def toMBR():Array[MBR]={
     segments.map(seg=>seg.toMBR()).toArray
+  }
+  def toMBBC():Array[MBBC]={
+    segments.map(seg=>seg.toMBBC()).toArray
   }
   def caltime():Tuple2[Long,Long]={
     if(points.nonEmpty){
@@ -64,6 +67,24 @@ class Segment(var time:Tuple2[Long,Long]=(0,0),
       high=high.gethigh(p)
     }
     MBR(low,high)
+  }
+  def maxspeed(): Double ={
+    val sp=points(0)
+    val ep=points(points.length-1)
+    var max:Double=0
+    for(p<-points){
+      if(p.coord.t!=sp.coord.t){
+        if(p.minDist2(sp)/p.minDist1(sp)>max) max=p.minDist2(sp)/p.minDist1(sp)
+      }
+      if(p.coord.t!=ep.coord.t) {
+        if (p.minDist2(ep) / p.minDist1(ep) > max) max = p.minDist2(ep) / p.minDist1(ep)
+      }
+
+    }
+    return max
+  }
+  def toMBBC():MBBC={
+    new MBBC(MBR(points(0),points(0)),MBR(points(points.length-1),points(points.length-1)),maxspeed(),toMBR())
   }
   def caltime():Tuple2[Long,Long]= {
     if (points.nonEmpty) {
