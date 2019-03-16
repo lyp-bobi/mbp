@@ -31,7 +31,7 @@ object HR2Tree{
     val grouped=segments.groupBy(_._1)
     val map =new mutable.HashMap[Tuple2[Long,Long],R2Tree]
     for((time,seg)<-grouped){
-      val rt=R2Tree(seg.map(x=>(x._2.toMBBC(),x._3,1)),10)
+      val rt=R2Tree(seg.map(x=>(x._2.toMBBC(),x._3,1)),max_entries_per_node)
       map(time)=rt
     }
     new HR2Tree(map,td)

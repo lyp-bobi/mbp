@@ -49,6 +49,7 @@ class NNOrdering() extends Ordering[(_, Double)] {
 case class RTree(root: RTreeNode) extends Index with Serializable {
   def range(query: MBR): Array[(Feature, Int)] = {
     var visit=0//for test
+    var leaf = 0
     val ans = mutable.ArrayBuffer[(Feature, Int)]()
     val st = new mutable.Stack[RTreeNode]()
     if (root.m_mbr.intersects2(query) && root.m_child.nonEmpty) st.push(root)
@@ -59,12 +60,13 @@ case class RTree(root: RTreeNode) extends Index with Serializable {
           case RTreeInternalEntry(mbr, node) =>
             if (query.intersects2(mbr)) {
               st.push(node)
-              println(node.m_mbr)
+              //println(node.m_mbr)
             }
         }
       } else {
         now.m_child.foreach {
           case RTreeLeafEntry(feature, m_data, _) =>
+            leaf+=1
             if (query.intersects2(feature)) {
               ans += ((feature, m_data))
               visit+=1
@@ -72,7 +74,8 @@ case class RTree(root: RTreeNode) extends Index with Serializable {
         }
       }
     }
-    println("RTree visited"+visit)
+    println("RTree MBR visited"+visit)
+    println("RTree Leaf visited"+leaf)
     ans.toArray
   }
 

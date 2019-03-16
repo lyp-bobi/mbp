@@ -33,7 +33,7 @@ object HRTree{
     val grouped=segments.groupBy(_._1)
     val map =new mutable.HashMap[Tuple2[Long,Long],RTree]
     for((time,seg)<-grouped){
-      val rt=RTree(seg.map(x=>(x._2.toMBR(),x._3,1)),10)
+      val rt=RTree(seg.map(x=>(x._2.toMBR(),x._3,1)),max_entries_per_node)
       map(time)=rt
     }
     new HRTree(map,td)

@@ -87,11 +87,10 @@ class outsideTest extends FunSuite with BeforeAndAfter{
       traj._1.segmentate(td)
     }
     val query=MBR(new Point(-168,53,1484719231000L),new Point(-166,55,1484719231000L))
-    val hrtree=HRTree(trajs,10,td)
+    val hrtree=HRTree(trajs,3,td)
     val res1=hrtree.cross(query)
-    val hr2tree=HR2Tree(trajs,10,td)
+    val hr2tree=HR2Tree(trajs,3,td)
     val res2=hr2tree.cross(query)
-
 
   }
 

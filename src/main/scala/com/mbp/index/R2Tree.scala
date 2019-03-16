@@ -45,6 +45,7 @@ case class R2TreeNode(m_mbbc: MBBC, m_child: Array[R2TreeEntry], isLeaf: Boolean
 case class R2Tree(root: R2TreeNode) extends Index with Serializable {
   def range2(query: MBR): Array[(Feature, Int)] = {
     var visit=0 //for test
+    var leaf = 0
     val ans = mutable.ArrayBuffer[(Feature, Int)]()
     val st = new mutable.Stack[R2TreeNode]()
     if (root.m_mbbc.intersects2(query) && root.m_child.nonEmpty) st.push(root)
@@ -55,12 +56,13 @@ case class R2Tree(root: R2TreeNode) extends Index with Serializable {
           case R2TreeInternalEntry(mbbc, node) =>
             if (query.intersects2(mbbc)) {
               st.push(node)
-              println(node.m_mbbc)
+              //println(node.m_mbbc)
             }
         }
       } else {
         now.m_child.foreach {
           case R2TreeLeafEntry(feature, m_data, _) =>
+            leaf+=1
             if (query.intersects2(feature)) {
               ans += ((feature, m_data))
               visit+=1
@@ -68,7 +70,8 @@ case class R2Tree(root: R2TreeNode) extends Index with Serializable {
         }
       }
     }
-    println("R2Tree visited"+visit)
+    println("R2Tree MBBC visited"+visit)
+    println("R2Tree Leaf visited"+leaf)
     ans.toArray
   }
 }
