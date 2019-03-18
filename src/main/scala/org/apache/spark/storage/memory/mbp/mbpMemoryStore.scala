@@ -30,7 +30,8 @@ import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 import com.google.common.io.ByteStreams
-import com.mbp.spatialPQ
+import com.mbp.{knnSpatialPQ, spatialPQ}
+import com.sun.xml.internal.ws.developer.Serialization
 import org.apache.spark.{SparkConf, TaskContext}
 import org.apache.spark.internal.Logging
 import org.apache.spark.internal.config.{UNROLL_MEMORY_CHECK_PERIOD, UNROLL_MEMORY_GROWTH_FACTOR}
@@ -54,7 +55,56 @@ class mbpMemoryStore(
   extends MemoryStore (conf, blockInfoManager, serializerManager,
     memoryManager, blockEvictionHandler: BlockEvictionHandler) {
   // TODO: load the thres from index or config
-  private val entries= new spatialPQ[BlockId, MemoryEntry[_]](10,10)
+  //private val entries= new spatialPQ[BlockId, MemoryEntry[_]](10,10)
+  case class knnSpatialPQ[BlockId, MemoryEntry[_]]()
+    extends mutable.LinkedHashMap[BlockId, MemoryEntry[_]] with Logging{
+    val neighbours = new mutable.LinkedHashMap[BlockId,mutable.LinkedHashSet[BlockId]]
+    override def put(key: BlockId, value: MemoryEntry[_]): Option[MemoryEntry[_]] = {
+      import org.apache.spark.storage.BlockId.RDD
+      case key@org.apache.spark.storage.BlockId.RDD=>
+
+      super.foreach((blockid,entry)=>{
+        val loc = new mutable.LinkedHashSet[BlockId]
+        case e: SerializedMemoryEntry[_] =>
+          blockInfoManager.lockForReading(blockId) match{
+            case Some(info)=>
+              val iter: Iterator[Any]=serializerManager.dataDeserializeStream(
+              blockId, this.getBytes(blockId).get.toInputStream())(info.classTag)
+              var min=Double.MaxValue
+              var max= Double.MinValue
+              iter.foreach { now =>
+                min = Math.min(now._1, min)
+                max = Math.max(now._2, max)
+              }
+              if()
+
+          }
+        case d:DeserializedMemoryEntry[_]=>
+
+
+      })
+        super.put(key, value)
+      case _ => super.put(key,value)
+    }
+
+    def getSpatial(key: BlockId):Option[MemoryEntry[_]]={
+      case key@RDD=> neighbours.get(key).foreach(block=>
+        val value = super.remove(block)
+        if(value!=null){
+          super.put(block,value)
+        })
+      super.get(key)
+      case _=> super.get(key)
+    }
+    //remove all blockId value in LinkedHashMap or just remove the blockId key
+    override def remove(key:BlockId):Option[MemoryEntry[_]]={
+      case key@RDD =>neighbours.remove(key)
+        super.remove(key)
+      case _ =>super.remove(key)
+    }
+  }
+
+  private val entries = new knnSpatialPQ()
   // TODO: implement this
   override def evictBlocksToFreeSpace(blockId: Option[BlockId],
                                       space: Long,
