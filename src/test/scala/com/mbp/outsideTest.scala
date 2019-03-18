@@ -6,7 +6,7 @@ import org.scalatest.BeforeAndAfter
 import scala.io.Source
 import scala.collection.mutable.ArrayBuffer
 import com.mbp.Feature._
-import com.mbp.index.{HRTree, RTree}
+import com.mbp.index._
 import java.io.{File, PrintWriter}
 import java.text.SimpleDateFormat
 
@@ -86,12 +86,11 @@ class outsideTest extends FunSuite with BeforeAndAfter{
     for(traj<-trajs){
       traj._1.segmentate(td)
     }
-    val hrtree=HRTree(trajs,10,td)
     val query=MBR(new Point(-168,53,1484719231000L),new Point(-166,55,1484719231000L))
-    val res=hrtree.cross(query)
-    for(t2<-res){
-      println(t2._2)
-    }
+    val hrtree=HRTree(trajs,3,td)
+    val res1=hrtree.cross(query)
+    val hr2tree=HR2Tree(trajs,3,td)
+    val res2=hr2tree.cross(query)
 
   }
 

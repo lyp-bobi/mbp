@@ -35,6 +35,16 @@ class Point(var coord: xytList) extends Feature {
       ans += (coord(i) - other.coord(i)) * (coord(i) - other.coord(i))
     Math.sqrt(ans)
   }
+  def minDist2(other: Point): Double = {
+    var ans = 0.0
+    for (i <- 0 to 1)
+      ans += (coord(i) - other.coord(i)) * (coord(i) - other.coord(i))
+    Math.sqrt(ans)
+  }
+  def minDist1(other: Point): Double = {
+    val i = 2
+    (coord(i) - other.coord(i)) * (coord(i) - other.coord(i))
+  }
   def gethigh(other:Point):Point={
     new Point(math.max(coord.x,other.coord.x),math.max(coord.y,other.coord.y),math.max(coord.t,other.coord.t).toLong)
   }
