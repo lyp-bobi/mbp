@@ -66,8 +66,8 @@ class outsideTest extends FunSuite with BeforeAndAfter{
     println(traj.segments.length)
   }
   */
-
-  test("cross query"){
+  /*
+  test("cross query on AIS"){
 
     val file=Source.fromFile("D://AIS_2017_01_Zone03.csv")
     val lines = file.getLines().drop(1).toArray
@@ -92,6 +92,28 @@ class outsideTest extends FunSuite with BeforeAndAfter{
     val hr2tree=HR2Tree(trajs,3,td)
     val res2=hr2tree.cross(query)
 
+  }
+  */
+  test("cross test on Taxi"){
+    val dir= new File("D:\\Taxi_070220")
+    val td = new timeDivision(timeDivision.parseTime("2007-02-20 00:00:00"),
+      timeDivision.parseTime("2007-02-21 00:00:00"),14400000)
+    val files=dir.listFiles()
+    val trajsr=new ArrayBuffer[Trajectory]()
+    for(file<-files){
+      val traj=SHTaxiReader(dir.toString+"/"+file.getName)
+      trajsr.append(traj)
+    }
+    val trajs=trajsr.toArray.zipWithIndex
+    for(traj<-trajs){
+      traj._1.segmentate(td)
+    }
+    val query=MBR(new Point(121.4,31.2,timeDivision.parseTime("2007-02-20 08:00:48")),
+      new Point(121.5,31.3,timeDivision.parseTime("2007-02-20 08:00:48")))
+    val hrtree=HRTree(trajs,2,td)
+    val res1=hrtree.cross(query)
+    val hr2tree=HR2Tree(trajs,2,td)
+    val res2=hr2tree.cross(query)
   }
 
 }
