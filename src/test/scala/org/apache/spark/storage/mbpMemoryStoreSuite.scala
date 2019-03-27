@@ -1,5 +1,6 @@
 package org.apache.spark.storage
 import org.apache.spark.SparkConf
+import org.apache.spark.internal.config.ConfigBuilder
 import org.apache.spark.memory.UnifiedMemoryManager
 import org.apache.spark.serializer.{KryoSerializer, SerializerManager}
 import org.apache.spark.storage.memory.{BlockEvictionHandler, MemoryStore}
@@ -8,8 +9,15 @@ import org.scalatest._
 
 import scala.reflect.ClassTag
 
-class mbpMemoryStoreSuite {
-  var conf: SparkConf = new SparkConf(false).set(STORAGE_UNROLL_MEMORY_THRESHOLD, 512L)
+class mbpMemoryStoreSuite extends FunSuite with BeforeAndAfter {
+  val STORAGE_UNROLL_MEMORY_THRESHOLD =
+    ConfigBuilder("spark.storage.unrollMemoryThreshold")
+      .doc("Initial memory to request before unrolling any block")
+      .longConf
+      .createWithDefault(1024 * 1024)
+  var conf: SparkConf = new SparkConf(false)
+    .set(STORAGE_UNROLL_MEMORY_THRESHOLD, 512L)
+
 
   // Reuse a serializer across tests to avoid creating a new thread-local buffer on each test
   val serializer = new KryoSerializer(new SparkConf(false).set("spark.kryoserializer.buffer", "1m"))
@@ -32,5 +40,6 @@ class mbpMemoryStoreSuite {
     blockEvictionHandler.memoryStore = memoryStore
     (memoryStore, blockInfoManager)
   }
+  test()
 
 }

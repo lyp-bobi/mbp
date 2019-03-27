@@ -19,92 +19,177 @@ package org.apache.spark.storage.memory.mbp
 
 import java.nio.ByteBuffer
 
-import org.apache.spark.SparkConf
-import org.apache.spark.memory.{MemoryManager, MemoryMode}
-import org.apache.spark.serializer.SerializerManager
-import org.apache.spark.storage.{BlockId, BlockInfoManager}
-import org.apache.spark.storage.memory._
-import org.apache.spark.util.io.ChunkedByteBuffer
-
-import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
-import scala.reflect.ClassTag
-import com.google.common.io.ByteStreams
-import com.mbp.{knnSpatialPQ, spatialPQ}
-import com.sun.xml.internal.ws.developer.Serialization
-import org.apache.spark.{SparkConf, TaskContext}
+import com.mbp.spatialPQ
 import org.apache.spark.internal.Logging
 import org.apache.spark.internal.config.{UNROLL_MEMORY_CHECK_PERIOD, UNROLL_MEMORY_GROWTH_FACTOR}
 import org.apache.spark.memory.{MemoryManager, MemoryMode}
 import org.apache.spark.serializer.{SerializationStream, SerializerManager}
-import org.apache.spark.storage._
+import org.apache.spark.storage.memory._
+import org.apache.spark.storage.{BlockId, BlockInfoManager, _}
 import org.apache.spark.unsafe.Platform
-import org.apache.spark.util.{SizeEstimator, Utils}
 import org.apache.spark.util.collection.SizeTrackingVector
 import org.apache.spark.util.io.{ChunkedByteBuffer, ChunkedByteBufferOutputStream}
+import org.apache.spark.util.{SizeEstimator, Utils}
+import org.apache.spark.{SparkConf, TaskContext}
 
+import scala.collection.mutable
 import scala.reflect.ClassTag
 
+case class Point(x:Double,y:Double){
+  override def equals(that: Any): Boolean = {
+    that match {
+      case p:Point=> (p.x==x)&&(p.y==y)
+      case _=>false
+    }
+  }
+}
 
 class mbpMemoryStore(
                  conf: SparkConf,
-                 blockInfoManager: BlockInfoManager,
+                 var blockInfoManager: BlockInfoManager,
                  serializerManager: SerializerManager,
                  memoryManager: MemoryManager,
                  blockEvictionHandler: BlockEvictionHandler)
   extends MemoryStore (conf, blockInfoManager, serializerManager,
     memoryManager, blockEvictionHandler: BlockEvictionHandler) {
   // TODO: load the thres from index or config
-  //private val entries= new spatialPQ[BlockId, MemoryEntry[_]](10,10)
-  case class knnSpatialPQ[BlockId, MemoryEntry[_]]()
+  private val entries= new spatialPQ[BlockId, MemoryEntry[_]](10,10)
+
+  case class knnSpatialPQ[BlockId,MemoryEntry[_] ](mms:mbpMemoryStore)
     extends mutable.LinkedHashMap[BlockId, MemoryEntry[_]] with Logging{
-    val neighbours = new mutable.LinkedHashMap[BlockId,mutable.LinkedHashSet[BlockId]]
+    val neighbours = new mutable.LinkedHashMap[BlockId,mutable.LinkedHashMap[BlockId,Double]]
     override def put(key: BlockId, value: MemoryEntry[_]): Option[MemoryEntry[_]] = {
-      import org.apache.spark.storage.BlockId.RDD
-      case key@org.apache.spark.storage.BlockId.RDD=>
-
-      super.foreach((blockid,entry)=>{
-        val loc = new mutable.LinkedHashSet[BlockId]
-        case e: SerializedMemoryEntry[_] =>
-          blockInfoManager.lockForReading(blockId) match{
-            case Some(info)=>
-              val iter: Iterator[Any]=serializerManager.dataDeserializeStream(
-              blockId, this.getBytes(blockId).get.toInputStream())(info.classTag)
-              var min=Double.MaxValue
-              var max= Double.MinValue
-              iter.foreach { now =>
-                min = Math.min(now._1, min)
-                max = Math.max(now._2, max)
+      key match {
+        case blockrddNew:org.apache.spark.storage.RDDBlockId=>
+          var newMin =Double.MaxValue
+          var newMax= Double.MinValue
+          val newIter = value match{
+            case rid:org.apache.spark.storage.RDDBlockId =>{
+              mms.blockInfoManager.lockForReading(rid) match {
+                case Some(info)=>
+                  if(info.level.deserialized)
+                    mms.getValues(rid).get
+                  else
+                    mms.serializerManager.dataDeserializeStream(rid,mms.getBytes(rid).get.toInputStream())(info.classTag)
               }
-              if()
-
+            }
           }
-        case d:DeserializedMemoryEntry[_]=>
+          newIter.foreach { now =>
+            now match{
+              case point:Point=>
+                newMin = math.min(point.x, newMin)
+                newMax = math.max(point.y, newMax)
+            }
+          }
 
+          val neighbour =  new mutable.LinkedHashMap[BlockId,Double]
+          //candidate in memory
+          neighbours.foreach(x =>{
+            val iter = x._1 match {
+              case rid:org.apache.spark.storage.RDDBlockId =>{
+                blockInfoManager.lockForReading(rid) match {
+                  case Some(info)=>
+                    if(info.level.deserialized)
+                      getValues(rid).get
+                    else
+                      serializerManager.dataDeserializeStream(rid,getBytes(rid).get.toInputStream())(info.classTag)
+                }
+              }
+            }
+            var min=Double.MaxValue
+            var max= Double.MinValue
+            iter.foreach { now =>
+              now match{
+                case point:Point=>
+                  min = math.min(point.x, min)
+                  max = math.max(point.y, max)
+              }
+            }
+            val dist = (max-newMax)*(min-newMin)*(max-newMax)*(min-newMin)
+            if(neighbour.size<3){
+              if(neighbour.firstEntry eq null){
+                val e = new mutable.LinkedEntry(x._1, dist.asInstanceOf[Double])
+                neighbour.firstEntry = e
+                neighbour.lastEntry = e
 
-      })
-        super.put(key, value)
-      case _ => super.put(key,value)
+              }else{
+                var now = neighbour.firstEntry
+                while(now.value>dist){
+                  now = now.later
+                }
+                if(now ne firstEntry){
+                  val e = new mutable.LinkedEntry(x._1, dist.asInstanceOf[Double])
+                  if(now eq null){
+                    val temp = neighbour.lastEntry
+                    neighbour.lastEntry = e
+                    e.earlier = temp
+                  }else{
+                    val temp = now.later
+                    now.later = e
+                    e.later = temp
+                  }
+                }
+              }
+            }
+            else{
+              var now = neighbour.firstEntry
+              while(now.value>dist){
+                now = now.later
+              }
+              if(now ne firstEntry){
+                val e = new mutable.LinkedEntry(x._1, dist.asInstanceOf[Double])
+                if(now eq null){
+                  val temp = neighbour.lastEntry
+                  neighbour.lastEntry = e
+                  e.earlier = temp
+                }else{
+                  val temp = now.later
+                  now.later = e
+                  e.later = temp
+                }
+                neighbour.remove(neighbour.firstEntry.key)
+              }
+            }
+          })
+          neighbour.foreach(x=>
+            moveToTail(x))
+          neighbours+=(key->neighbour)
+          super.put(key,value)
+        case _ =>super.put(key,value)
+      }
     }
 
+    def moveToTail(key:(BlockId,Double))={
+      super.remove(key._1) match {
+        case Some(v) =>super.put(key._1,v)
+      }
+    }
     def getSpatial(key: BlockId):Option[MemoryEntry[_]]={
-      case key@RDD=> neighbours.get(key).foreach(block=>
-        val value = super.remove(block)
-        if(value!=null){
-          super.put(block,value)
-        })
-      super.get(key)
-      case _=> super.get(key)
+      key match {
+        case blockrdd:org.apache.spark.storage.RDDBlockId=> {
+          if(neighbours.get(blockrdd).isDefined){
+            neighbours(blockrdd).foreach(x=>
+              moveToTail(x)
+            )
+          }
+          super.get(key)
+        }
+        case _=> super.get(key)
+      }
     }
     //remove all blockId value in LinkedHashMap or just remove the blockId key
     override def remove(key:BlockId):Option[MemoryEntry[_]]={
-      case key@RDD =>neighbours.remove(key)
-        super.remove(key)
-      case _ =>super.remove(key)
+      key match{
+        case blockrdd:org.apache.spark.storage.RDDBlockId=>{
+          neighbours.remove(blockrdd)
+          neighbours.foreach(li=>li._2.remove(key))
+          super.remove(blockrdd)
+        }
+        case e => super.remove(e)
+      }
     }
   }
-
-  private val entries = new knnSpatialPQ()
+  //private val entries = new knnSpatialPQ(this)
   // TODO: implement this
   override def evictBlocksToFreeSpace(blockId: Option[BlockId],
                                       space: Long,

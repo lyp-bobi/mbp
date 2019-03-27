@@ -2,7 +2,6 @@ package com.mbp
 
 import com.mbp.Feature.MBR
 import org.apache.spark.internal.Logging
-import org.apache.spark.storage.BlockId
 
 import scala.collection.mutable
 
@@ -76,31 +75,5 @@ case class spatialPQ[A,B](spatial_thres:Double,temporal_thres:Double)
     locs.clear()
     neighbours.clear()
     super.clear()
-  }
-}
-
-case class knnSpatialPQ[BlockId, MemoryEntry[_]]()
-  extends mutable.LinkedHashMap[BlockId, MemoryEntry[_]] with Logging{
-  override def put(key: BlockId, value: MemoryEntry[_]): Option[MemoryEntry[_]] = {
-    case key@RDD=> super.foreach((blockid,entry)=>{})
-    super.put(key, value)
-    case _ => super.put(key,value)
-  }
-  val neighbours = new mutable.LinkedHashMap[BlockId,mutable.LinkedHashSet[BlockId]]
-
-  def getSpatial(key: BlockId):Option[MemoryEntry[_]]={
-    case key@RDD=> neighbours.get(key).foreach(block=>
-      val value = super.remove(block)
-      if(value!=null){
-        super.put(block,value)
-      })
-      super.get(key)
-    case _=> super.get(key)
-  }
-  //remove all blockId value in LinkedHashMap or just remove the blockId key
-  override def remove(key:BlockId):Option[MemoryEntry[_]]={
-    case key@RDD =>neighbours.remove(key)
-      super.remove(key)
-    case _ =>super.remove(key)
   }
 }
