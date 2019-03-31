@@ -17,6 +17,7 @@
 
 package org.apache.spark.storage
 
+
 import java.nio.ByteBuffer
 
 import scala.language.implicitConversions
@@ -26,12 +27,12 @@ import scala.reflect.ClassTag
 import org.scalatest._
 
 import org.apache.spark._
-import org.apache.spark.internal.config.ConfigBuilder
-import org.apache.spark.memory.{MemoryMode, UnifiedMemoryManager}
+import org.apache.spark.memory.{MemoryMode, StaticMemoryManager}
 import org.apache.spark.serializer.{KryoSerializer, SerializerManager}
 import org.apache.spark.storage.memory.{BlockEvictionHandler, MemoryStore, PartiallySerializedBlock, PartiallyUnrolledIterator}
 import org.apache.spark.util._
 import org.apache.spark.util.io.ChunkedByteBuffer
+import org.scalactic.TripleEqualsSupport._
 
 class MemoryStoreSuite
   extends SparkFunSuite
