@@ -19,13 +19,12 @@ package org.apache.spark.storage.memory.mbp
 
 import java.nio.ByteBuffer
 
-//import com.mbp.spatialPQ
 import org.apache.spark.internal.Logging
 import org.apache.spark.internal.config.{UNROLL_MEMORY_CHECK_PERIOD, UNROLL_MEMORY_GROWTH_FACTOR}
 import org.apache.spark.memory.{MemoryManager, MemoryMode}
 import org.apache.spark.serializer.{SerializationStream, SerializerManager}
+import org.apache.spark.storage._
 import org.apache.spark.storage.memory._
-import org.apache.spark.storage.{BlockId, BlockInfoManager, _}
 import org.apache.spark.unsafe.Platform
 import org.apache.spark.util.collection.SizeTrackingVector
 import org.apache.spark.util.io.{ChunkedByteBuffer, ChunkedByteBufferOutputStream}
@@ -35,6 +34,9 @@ import org.apache.spark.{SparkConf, TaskContext}
 import scala.collection.mutable
 import scala.reflect.ClassTag
 
+
+//import com.mbp.spatialPQ
+
 case class Point(x:Double,y:Double){
   override def equals(that: Any): Boolean = {
     that match {
@@ -43,239 +45,72 @@ case class Point(x:Double,y:Double){
     }
   }
 }
-/*
-case class knnSpatialPQ[A,B[_]](conf: SparkConf)
-  extends mutable.LinkedHashMap[A, B] with Logging{
-  val neighbours = new mutable.LinkedHashMap[A,mutable.LinkedHashMap[A,Double]]
-  override def put(key: A, value:B ): Option[B] = {
-    key match {
-      case blockrddNew:org.apache.spark.storage.RDDBlockId=>
-        var newMin =Double.MaxValue
-        var newMax= Double.MinValue
-        val newIter = value match{
-          case rid:org.apache.spark.storage.RDDBlockId =>{
-            mms.blockInfoManager.lockForReading(rid) match {
-              case Some(info)=>
-                if(info.level.deserialized)
-                  super.get(rid)
-                else
-                  mms.serializerManager.dataDeserializeStream(rid,mms.getBytes(rid).get.toInputStream())(info.classTag)
-            }
-          }
-        }
-        newIter.foreach { now =>
-          now match{
-            case point:Point=>
-              newMin = math.min(point.x, newMin)
-              newMax = math.max(point.y, newMax)
-          }
-        }
 
-        val neighbour =  new mutable.LinkedHashMap[A,Double]
-        //candidate in memory
-        neighbours.foreach(x =>{
-          val iter = x._1 match {
-            case rid:org.apache.spark.storage.RDDBlockId =>{
-              mms.blockInfoManager.lockForReading(rid) match {
-                case Some(info)=>
-                  if(info.level.deserialized)
-                    super.getValues(rid.asInstanceOf[A]).get
-                  else
-                    mms.serializerManager.dataDeserializeStream(rid,getBytes(rid).get.toInputStream())(info.classTag)
-              }
-            }
-          }
-          var min=Double.MaxValue
-          var max= Double.MinValue
-          iter.foreach { now =>
-            now match{
-              case point:Point=>
-                min = math.min(point.x, min)
-                max = math.max(point.y, max)
-            }
-          }
-          val dist = (max-newMax)*(min-newMin)*(max-newMax)*(min-newMin)
-          if(neighbour.size<3){
-            if(neighbour.firstEntry eq null){
-              val e = new mutable.LinkedEntry(x._1, dist.asInstanceOf[Double])
-              neighbour.firstEntry = e
-              neighbour.lastEntry = e
-
-            }else{
-              var now = neighbour.firstEntry
-              while(now.value>dist){
-                now = now.later
-              }
-              if(now ne firstEntry){
-                val e = new mutable.LinkedEntry(x._1, dist.asInstanceOf[Double])
-                if(now eq null){
-                  val temp = neighbour.lastEntry
-                  neighbour.lastEntry = e
-                  e.earlier = temp
-                }else{
-                  val temp = now.later
-                  now.later = e
-                  e.later = temp
-                }
-              }
-            }
-          }
-          else{
-            var now = neighbour.firstEntry
-            while(now.value>dist){
-              now = now.later
-            }
-            if(now ne firstEntry){
-              val e = new mutable.LinkedEntry(x._1, dist.asInstanceOf[Double])
-              if(now eq null){
-                val temp = neighbour.lastEntry
-                neighbour.lastEntry = e
-                e.earlier = temp
-              }else{
-                val temp = now.later
-                now.later = e
-                e.later = temp
-              }
-              neighbour.remove(neighbour.firstEntry.key)
-            }
-          }
-        })
-        neighbour.foreach(x=>
-          moveToTail(x))
-        neighbours+=(key->neighbour)
-        super.put(key,value)
-      case _ =>super.put(key,value)
-    }
-  }
-
-  def moveToTail(key:(A,Double))={
-    super.remove(key._1) match {
-      case Some(v) =>super.put(key._1,v)
-    }
-  }
-  def getSpatial(key: A):Option[B]={
-    key match {
-      case blockrdd:org.apache.spark.storage.RDDBlockId=> {
-        if(neighbours.get(blockrdd).isDefined){
-          neighbours(blockrdd).foreach(x=>
-            moveToTail(x)
-          )
-        }
-        super.get(key)
-      }
-      case _=> super.get(key)
-    }
-  }
-  //remove all blockId value in LinkedHashMap or just remove the blockId key
-  override def remove(key:A):Option[B]={
-    key match{
-      case blockrdd:org.apache.spark.storage.RDDBlockId=>{
-        neighbours.remove(blockrdd)
-        neighbours.foreach(li=>li._2.remove(key))
-        super.remove(blockrdd)
-      }
-      case e => super.remove(e)
-    }
-  }
-}*/
 case class MBR(x:Double,y:Double){
   def dist(other:MBR):Double={
     (x-other.x)*(x-other.x)*(y-other.y)*(other.y)
   }
 }
 
-case class knnSpatialPQ2[A,B](distArray: mutable.LinkedHashMap[BlockId,MBR])
+case class knnSpatialPQ[A,B](distArray: mutable.LinkedHashMap[BlockId,MBR])
   extends mutable.LinkedHashMap[A, B] with Logging{
-  val neighbours = new mutable.LinkedHashMap[A,mutable.LinkedHashMap[A,Double]]
+  import java.util.{LinkedList => JLinkedList}
+  val neighbours = new mutable.LinkedHashMap[A,JLinkedList[(A,Double)]]
   override def put(key: A, value:B ): Option[B] = {
     key match {
       case blockrddNew:org.apache.spark.storage.RDDBlockId=>
         val newMBR = distArray.get(blockrddNew)
         if(newMBR.isDefined){
           //TODO:get the mbr of key Block
-          val neighbour =  new mutable.LinkedHashMap[A,Double]
+          val neighbour =  new JLinkedList[(A,Double)]
           //candidate in memory
           neighbours.foreach(x =>{
-            val iter = x._1 match {
+            x._1 match {
               case rid:org.apache.spark.storage.RDDBlockId =>{
                 //TODO:get the mbr of rid Block
-                distArray.get(rid)
-              }
-            }
-            if(iter.isDefined ){
-              val dist = newMBR.get.dist(iter.get)
-              if(neighbour.size<3){
-                if(neighbour.firstEntry eq null){
-                  val e = new mutable.LinkedEntry(x._1, dist)
-                  neighbour.firstEntry = e
-                  neighbour.lastEntry = e
+                val oldMBR = distArray.get(rid)
+                if(oldMBR.isDefined){
+                  val dist= newMBR.get.dist(oldMBR.get)
 
-                }else{
-                  var now = neighbour.firstEntry
-                  while(now.value>dist){
-                    now = now.later
-                  }
-                  if(now ne firstEntry){
-                    val e = new mutable.LinkedEntry(x._1, dist)
-                    if(now eq null){
-                      val temp = neighbour.lastEntry
-                      neighbour.lastEntry = e
-                      e.earlier = temp
-                    }else{
-                      val temp = now.later
-                      now.later = e
-                      e.later = temp
-                    }
-                  }
-                }
-              }
-              else{
-                var now = neighbour.firstEntry
-                while(now.value>dist){
-                  now = now.later
-                }
-                if(now ne firstEntry){
-                  val e = new mutable.LinkedEntry(x._1, dist)
-                  if(now eq null){
-                    val temp = neighbour.lastEntry
-                    neighbour.lastEntry = e
-                    e.earlier = temp
+                  if(neighbour.size()==0){
+                    neighbour.add((rid.asInstanceOf[A],dist))
                   }else{
-                    val temp = now.later
-                    now.later = e
-                    e.later = temp
+                    var i=0
+                    while(i<neighbour.size()&&neighbour.get(i)._2>dist){
+                      i = i+1
+                    }
+                    neighbour.add(i,(rid.asInstanceOf[A],dist))
                   }
-                  neighbour.remove(neighbour.firstEntry.key)
+                  if(neighbour.size()>3){
+                    neighbour.pollFirst()
+                  }
                 }
               }
             }
-            else
-              super.put(key,value)
-
           })
-          neighbour.foreach(x=>
-            moveToTail(x))
           neighbours+=(key->neighbour)
-          super.put(key,value)
+          val iter = neighbour.iterator()
+          while(iter.hasNext){
+            moveToTail(iter.next())
+          }
         }
-        else
-          super.put(key,value)
-
-      case _ =>super.put(key,value)
     }
+    super.put(key,value)
   }
   def moveToTail(key:(A,Double))={
     super.remove(key._1) match {
       case Some(v) =>super.put(key._1,v)
+      //case _=>super.put(key._1,_)
     }
   }
   def getSpatial(key: A):Option[B]={
     key match {
       case blockrdd:org.apache.spark.storage.RDDBlockId=> {
         if(neighbours.get(blockrdd.asInstanceOf[A]).isDefined){
-          neighbours(blockrdd.asInstanceOf[A]).foreach(x=>
-            moveToTail(x)
-          )
+          val iter = neighbours(blockrdd.asInstanceOf[A]).iterator()
+          while(iter.hasNext){
+            moveToTail(iter.next())
+          }
         }
         super.get(key)
       }
@@ -295,6 +130,80 @@ case class knnSpatialPQ2[A,B](distArray: mutable.LinkedHashMap[BlockId,MBR])
   }
 
 }
+case class knnSpatialPQ2[A,B](distArray: mutable.LinkedHashMap[A,MBR])
+  extends mutable.LinkedHashMap[A, B] with Logging{
+  import java.util.{LinkedList => JLinkedList}
+  val neighbours = new mutable.LinkedHashMap[A,JLinkedList[(A,Double)]]
+  def addNew(neighbour:JLinkedList[(A,Double)],x:A,dist:Double)={
+    if(neighbour.size()==0){
+      neighbour.add((x,dist))
+    }else{
+      var i=0
+      while(i<neighbour.size()&&neighbour.get(i)._2>dist){
+        i = i+1
+      }
+      neighbour.add(i,(x,dist))
+    }
+    if(neighbour.size()>3){
+      neighbour.pollFirst()
+    }
+  }
+  override def put(key: A, value:B ): Option[B] = {
+
+    val newMBR = distArray.get(key)
+    if(newMBR.isDefined){
+      //TODO:get the mbr of key Block
+      val neighbour =  new JLinkedList[(A,Double)]
+      //candidate in memory
+      neighbours.foreach(x =>{
+
+        //TODO:get the mbr of rid Block
+        val oldMBR = distArray.get(x._1)
+        if(oldMBR.isDefined){
+          val dist= newMBR.get.dist(oldMBR.get)
+          addNew(neighbour,x._1,dist)
+          if(neighbours.get(x._1).isDefined){
+            addNew(neighbours(x._1),key,dist)
+          }
+        }
+      })
+      neighbours+=(key->neighbour)
+      val iter = neighbour.iterator()
+      while(iter.hasNext){
+        moveToTail(iter.next())
+      }
+    }
+
+    super.put(key,value)
+  }
+  def moveToTail(key:(A,Double))={
+    super.remove(key._1) match {
+      case Some(v) =>super.put(key._1,v)
+      //case _=>super.put(key._1,_)
+    }
+  }
+  def getSpatial(key: A):Option[B]={
+
+    if(neighbours.get(key).isDefined){
+      val iter = neighbours(key).iterator()
+      while(iter.hasNext){
+        moveToTail(iter.next())
+      }
+    }
+
+    super.get(key)
+
+  }
+  //remove all blockId value in LinkedHashMap or just remove the blockId key
+  override def remove(key:A):Option[B]={
+
+    neighbours.remove(key.asInstanceOf[A])
+    neighbours.foreach(li=>li._2.remove(key))
+    super.remove(key.asInstanceOf[A])
+
+  }
+
+}
 class mbpMemoryStore(
                  conf: SparkConf,
                  blockInfoManager: BlockInfoManager,
@@ -305,8 +214,8 @@ class mbpMemoryStore(
     memoryManager, blockEvictionHandler: BlockEvictionHandler) {
   self=>
   // TODO: load the thres from index or config
-  private val entries= new knnSpatialPQ2[BlockId, MemoryEntry[_]]()
-
+  val distArray = new mutable.LinkedHashMap[BlockId,MBR]
+  private val entries= new knnSpatialPQ2[BlockId, MemoryEntry[_]](distArray)
 
   //private val entries = new knnSpatialPQ(this)
   // TODO: implement this
@@ -664,7 +573,7 @@ class mbpMemoryStore(
 }
 
   override def getBytes(blockId: BlockId): Option[ChunkedByteBuffer] = {
-    val entry = entries.synchronized { entries.get(blockId) }
+    val entry = entries.synchronized { entries.getSpatial(blockId) }
     entry match {
       case None => None
       case Some(ent)=>
@@ -677,7 +586,7 @@ class mbpMemoryStore(
   }
 
   override def getValues(blockId: BlockId): Option[Iterator[_]] = {
-    val entry = entries.synchronized { entries.get(blockId) }
+    val entry = entries.synchronized { entries.getSpatial(blockId) }
     entry match {
       case None => None
       case Some(ent)=>
@@ -719,12 +628,7 @@ class mbpMemoryStore(
     logInfo("MemoryStore cleared")
   }
 
-  /**
-    * Return the RDD ID that a given block ID is from, or None if it is not an RDD block.
-    */
-  private def getRddId(blockId: BlockId): Option[Int] = {
-    blockId.asRDDId.map(_.rddId)
-  }
+
 
 
   // hook for testing, so we can simulate a race
@@ -739,93 +643,6 @@ class mbpMemoryStore(
     Option(TaskContext.get()).map(_.taskAttemptId()).getOrElse(-1L)
   }
 
-  /**
-    * Reserve memory for unrolling the given block for this task.
-    *
-    * @return whether the request is granted.
-    */
-  override def reserveUnrollMemoryForThisTask(
-                                      blockId: BlockId,
-                                      memory: Long,
-                                      memoryMode: MemoryMode): Boolean = {
-    memoryManager.synchronized {
-      val success = memoryManager.acquireUnrollMemory(blockId, memory, memoryMode)
-      if (success) {
-        val taskAttemptId = currentTaskAttemptId()
-        val unrollMemoryMap = memoryMode match {
-          case MemoryMode.ON_HEAP => onHeapUnrollMemoryMap
-          case MemoryMode.OFF_HEAP => offHeapUnrollMemoryMap
-        }
-        unrollMemoryMap(taskAttemptId) = unrollMemoryMap.getOrElse(taskAttemptId, 0L) + memory
-      }
-      success
-    }
-  }
-
-  /**
-    * Release memory used by this task for unrolling blocks.
-    * If the amount is not specified, remove the current task's allocation altogether.
-    */
-  override def releaseUnrollMemoryForThisTask(memoryMode: MemoryMode, memory: Long = Long.MaxValue): Unit = {
-    val taskAttemptId = currentTaskAttemptId()
-    memoryManager.synchronized {
-      val unrollMemoryMap = memoryMode match {
-        case MemoryMode.ON_HEAP => onHeapUnrollMemoryMap
-        case MemoryMode.OFF_HEAP => offHeapUnrollMemoryMap
-      }
-      if (unrollMemoryMap.contains(taskAttemptId)) {
-        val memoryToRelease = math.min(memory, unrollMemoryMap(taskAttemptId))
-        if (memoryToRelease > 0) {
-          unrollMemoryMap(taskAttemptId) -= memoryToRelease
-          memoryManager.releaseUnrollMemory(memoryToRelease, memoryMode)
-        }
-        if (unrollMemoryMap(taskAttemptId) == 0) {
-          unrollMemoryMap.remove(taskAttemptId)
-        }
-      }
-    }
-  }
-
-  /**
-    * Return the amount of memory currently occupied for unrolling blocks across all tasks.
-    */
-  override def currentUnrollMemory: Long = memoryManager.synchronized {
-    onHeapUnrollMemoryMap.values.sum + offHeapUnrollMemoryMap.values.sum
-  }
-
-  /**
-    * Return the amount of memory currently occupied for unrolling blocks by this task.
-    */
-  override def currentUnrollMemoryForThisTask: Long = memoryManager.synchronized {
-    onHeapUnrollMemoryMap.getOrElse(currentTaskAttemptId(), 0L) +
-      offHeapUnrollMemoryMap.getOrElse(currentTaskAttemptId(), 0L)
-  }
-
-  /**
-    * Return the number of tasks currently unrolling blocks.
-    */
-  private def numTasksUnrolling: Int = memoryManager.synchronized {
-  (onHeapUnrollMemoryMap.keys ++ offHeapUnrollMemoryMap.keys).toSet.size
-}
-
-  /**
-    * Log information about current memory usage.
-    */
-  private def logMemoryUsage(): Unit = {
-  logInfo(
-    s"Memory use = ${Utils.bytesToString(blocksMemoryUsed)} (blocks) + " +
-      s"${Utils.bytesToString(currentUnrollMemory)} (scratch space shared across " +
-      s"$numTasksUnrolling tasks(s)) = ${Utils.bytesToString(memoryUsed)}. " +
-      s"Storage limit = ${Utils.bytesToString(maxMemory)}."
-  )
-}
-
-  /**
-    * Log a warning for failing to unroll a block.
-    *
-    * @param blockId ID of the block we are trying to unroll.
-    * @param finalVectorSize Final size of the vector before unrolling failed.
-    */
   private def logUnrollFailureMessage(blockId: BlockId, finalVectorSize: Long): Unit = {
     logWarning(
       s"Not enough space to cache $blockId in memory! " +
@@ -833,5 +650,28 @@ class mbpMemoryStore(
     )
     logMemoryUsage()
   }
+
+  /**
+    * Log information about current memory usage.
+    */
+  private def logMemoryUsage(): Unit = {
+    logInfo(
+      s"Memory use = ${Utils.bytesToString(blocksMemoryUsed)} (blocks) + " +
+        s"${Utils.bytesToString(currentUnrollMemory)} (scratch space shared across " +
+        s"$numTasksUnrolling tasks(s)) = ${Utils.bytesToString(memoryUsed)}. " +
+        s"Storage limit = ${Utils.bytesToString(maxMemory)}."
+    )
+  }
+  /**
+    * Return the number of tasks currently unrolling blocks.
+    */
+  private def numTasksUnrolling: Int = memoryManager.synchronized {
+    (onHeapUnrollMemoryMap.keys ++ offHeapUnrollMemoryMap.keys).toSet.size
+  }
+
+
+
+
+
 
 }
