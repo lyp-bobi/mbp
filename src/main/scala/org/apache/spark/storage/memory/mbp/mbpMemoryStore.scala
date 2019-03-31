@@ -32,6 +32,7 @@ import org.apache.spark.util.{SizeEstimator, Utils}
 import org.apache.spark.{SparkConf, TaskContext}
 
 import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 
 
@@ -48,7 +49,7 @@ case class Point(x:Double,y:Double){
 
 case class MBR(x:Double,y:Double){
   def dist(other:MBR):Double={
-    (x-other.x)*(x-other.x)*(y-other.y)*(other.y)
+    (x-other.x)*(x-other.x)*(y-other.y)*(y-other.y)
   }
 }
 
@@ -144,7 +145,7 @@ case class knnSpatialPQ2[A,B](distArray: mutable.LinkedHashMap[A,MBR])
       }
       neighbour.add(i,(x,dist))
     }
-    if(neighbour.size()>3){
+    if(neighbour.size()>1){
       neighbour.pollFirst()
     }
   }
@@ -215,14 +216,112 @@ class mbpMemoryStore(
   self=>
   // TODO: load the thres from index or config
   val distArray = new mutable.LinkedHashMap[BlockId,MBR]
+  distArray.put(new TestBlockId("b1"),MBR(2,3))
+  distArray.put(new TestBlockId("b2"),MBR(5,6))
+  distArray.put(new TestBlockId("b3"),MBR(1,2))
   private val entries= new knnSpatialPQ2[BlockId, MemoryEntry[_]](distArray)
 
   //private val entries = new knnSpatialPQ(this)
   // TODO: implement this
-  override def evictBlocksToFreeSpace(blockId: Option[BlockId],
-                                      space: Long,
-                                      memoryMode: MemoryMode): Long =
-    super.evictBlocksToFreeSpace(blockId, space, memoryMode)
+  private def getRddId(blockId: BlockId): Option[Int] = {
+    blockId.asRDDId.map(_.rddId)
+  }
+  override private[spark] def evictBlocksToFreeSpace(
+                                             blockId: Option[BlockId],
+                                             space: Long,
+                                             memoryMode: MemoryMode): Long = {
+    assert(space > 0)
+    memoryManager.synchronized {
+      var freedMemory = 0L
+      val rddToAdd = blockId.flatMap(getRddId)
+      val selectedBlocks = new ArrayBuffer[BlockId]
+      def blockIsEvictable(blockId: BlockId, entry: MemoryEntry[_]): Boolean = {
+        entry.memoryMode == memoryMode && (rddToAdd.isEmpty || rddToAdd != getRddId(blockId))
+      }
+      // This is synchronized to ensure that the set of entries is not changed
+      // (because of getValue or getBytes) while traversing the iterator, as that
+      // can lead to exceptions.
+      entries.synchronized {
+        val iterator = entries.iterator
+        while (freedMemory < space && iterator.hasNext) {
+          val pair = iterator.next()
+          val blockId = pair._1
+          val entry = pair._2
+          if (blockIsEvictable(blockId, entry)) {
+            // We don't want to evict blocks which are currently being read, so we need to obtain
+            // an exclusive write lock on blocks which are candidates for eviction. We perform a
+            // non-blocking "tryLock" here in order to ignore blocks which are locked for reading:
+            if (blockInfoManager.lockForWriting(blockId, blocking = false).isDefined) {
+              selectedBlocks += blockId
+              freedMemory += pair._2.size
+            }
+          }
+        }
+      }
+
+      def dropBlock[T](blockId: BlockId, entry: MemoryEntry[T]): Unit = {
+        val data = entry match {
+          case DeserializedMemoryEntry(values, _, _) => Left(values)
+          case SerializedMemoryEntry(buffer, _, _) => Right(buffer)
+        }
+        val newEffectiveStorageLevel =
+          blockEvictionHandler.dropFromMemory(blockId, () => data)(entry.classTag)
+        if (newEffectiveStorageLevel.isValid) {
+          // The block is still present in at least one store, so release the lock
+          // but don't delete the block info
+          blockInfoManager.unlock(blockId)
+        } else {
+          // The block isn't present in any store, so delete the block info so that the
+          // block can be stored again
+          blockInfoManager.removeBlock(blockId)
+        }
+      }
+
+      if (freedMemory >= space) {
+        var lastSuccessfulBlock = -1
+        try {
+          logInfo(s"${selectedBlocks.size} blocks selected for dropping " +
+            s"(${Utils.bytesToString(freedMemory)} bytes)")
+          (0 until selectedBlocks.size).foreach { idx =>
+            val blockId = selectedBlocks(idx)
+            val entry = entries.synchronized {
+              entries.get(blockId)
+            }
+            // This should never be null as only one task should be dropping
+            // blocks and removing entries. However the check is still here for
+            // future safety.
+            entry match {
+              case Some(en)=>dropBlock(blockId, en)
+                afterDropAction(blockId)
+            }
+
+            lastSuccessfulBlock = idx
+          }
+          logInfo(s"After dropping ${selectedBlocks.size} blocks, " +
+            s"free memory is ${Utils.bytesToString(maxMemory - blocksMemoryUsed)}")
+          freedMemory
+        } finally {
+          // like BlockManager.doPut, we use a finally rather than a catch to avoid having to deal
+          // with InterruptedException
+          if (lastSuccessfulBlock != selectedBlocks.size - 1) {
+            // the blocks we didn't process successfully are still locked, so we have to unlock them
+            (lastSuccessfulBlock + 1 until selectedBlocks.size).foreach { idx =>
+              val blockId = selectedBlocks(idx)
+              blockInfoManager.unlock(blockId)
+            }
+          }
+        }
+      } else {
+        blockId.foreach { id =>
+          logInfo(s"Will not store $id")
+        }
+        selectedBlocks.foreach { id =>
+          blockInfoManager.unlock(id)
+        }
+        0L
+      }
+    }
+  }
 
 
   /*
