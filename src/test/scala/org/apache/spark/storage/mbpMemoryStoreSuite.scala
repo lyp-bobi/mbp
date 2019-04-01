@@ -53,7 +53,7 @@ class mbpMemoryStoreSuite extends FunSuite with BeforeAndAfter with BeforeAndAft
       }
     }
     val memoryStore =
-      new MemoryStore(conf, blockInfoManager, serializerManager, memManager, blockEvictionHandler)
+      new mbpMemoryStore(conf, blockInfoManager, serializerManager, memManager, blockEvictionHandler)
     memManager.setMemoryStore(memoryStore)
     blockEvictionHandler.memoryStore = memoryStore
     (memoryStore, blockInfoManager)
@@ -65,6 +65,7 @@ class mbpMemoryStoreSuite extends FunSuite with BeforeAndAfter with BeforeAndAft
       assert(e === a, s"$hint did not return original values!")
     }
   }
+
 /*
   test("reserve/release unroll memory") {
     val (memoryStore, _) = makeMemoryStore(12000)
@@ -222,10 +223,11 @@ class mbpMemoryStoreSuite extends FunSuite with BeforeAndAfter with BeforeAndAft
     result4.left.get.close()
     assert(memoryStore.currentUnrollMemoryForThisTask === 0) // close released the unroll memory
   }
-*/
+
+
   test("safely unroll blocks through putIteratorAsBytes") {
     val (memoryStore, blockInfoManager) = makeMemoryStore(12000)
-    val smallList = List.fill(40)(new Array[Byte](100))
+    val smallList = List.fill(30)(new Array[Byte](100))
     val bigList = List.fill(40)(new Array[Byte](1000))
     def smallIterator: Iterator[Any] = smallList.iterator.asInstanceOf[Iterator[Any]]
     def bigIterator: Iterator[Any] = bigList.iterator.asInstanceOf[Iterator[Any]]
@@ -286,7 +288,7 @@ class mbpMemoryStoreSuite extends FunSuite with BeforeAndAfter with BeforeAndAft
     result4.left.get.discard()
     assert(memoryStore.currentUnrollMemoryForThisTask === 0) // discard released the unroll memory
   }
-/*
+
   test("PartiallySerializedBlock.valuesIterator") {
     val (memoryStore, blockInfoManager) = makeMemoryStore(12000)
     val bigList = List.fill(40)(new Array[Byte](1000))
@@ -380,16 +382,17 @@ class mbpMemoryStoreSuite extends FunSuite with BeforeAndAfter with BeforeAndAft
       fail("A big ByteBuffer that cannot be put into MemoryStore should not be created")
     })
   }
-
+*/
   test("put a small ByteBuffer to MemoryStore") {
     val (memoryStore, _) = makeMemoryStore(12000)
     val blockId = BlockId("rdd_3_10")
     var bytes: ChunkedByteBuffer = null
-    memoryStore.putBytes(blockId, 10000, MemoryMode.ON_HEAP, () => {
+    val su=memoryStore.putBytes(blockId, 10000, MemoryMode.ON_HEAP, () => {
       bytes = new ChunkedByteBuffer(ByteBuffer.allocate(10000))
       bytes
     })
+    assert(su === true)
     assert(memoryStore.getSize(blockId) === 10000)
-  }*/
+  }
 
 }

@@ -129,6 +129,11 @@ case class knnSpatialPQ[A,B](distArray: mutable.LinkedHashMap[BlockId,MBR])
       case e => super.remove(e)
     }
   }
+  override def clear(): Unit ={
+    //locs.clear()
+    neighbours.clear()
+    super.clear()
+  }
 
 }
 case class knnSpatialPQ2[A,B](distArray: mutable.LinkedHashMap[A,MBR])
@@ -368,7 +373,8 @@ class mbpMemoryStore(
 
   override def getSize(blockId: BlockId): Long = {
     entries.synchronized {
-      entries.get(blockId).size
+      val x=entries.get(blockId)
+      x.get.size
     }
   }
 
